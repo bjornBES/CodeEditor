@@ -1,0 +1,33 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="App">
+
+  <Application.Resources>
+    <!-- Pull from your JSON theme loader at runtime -->
+    <SolidColorBrush x:Key="button.background" Color="#0078d4"/>
+    <SolidColorBrush x:Key="button.foreground" Color="#ffffff"/>
+    <SolidColorBrush x:Key="button.hoverbackground"  Color="#026ec1"/>
+    <SolidColorBrush x:Key="button.background.click" Color="#005a9e"/>
+  </Application.Resources>
+
+  <Application.Styles>
+    <!-- Base theme
+    <FluentTheme/>
+    -->
+
+    <!-- AvaloniaEdit theme-->
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+
+    <!-- Global Button Hover Style
+    <Style Selector="Button">
+      <Setter Property="Background" Value="{DynamicResource button.background}"/>
+      <Setter Property="Foreground" Value="{DynamicResource button.foreground}"/>
+    </Style>
+
+    <Style Selector="Button:pressed">
+      <Setter Property="Background" Value="{DynamicResource button.background.click}"/>
+    </Style>
+    -->
+  </Application.Styles>
+
+</Application>
