@@ -26,7 +26,7 @@ public class EditorTab : Panel
 
     public EditorTab()
     {
-        Background = (IBrush)Application.Current.Resources["editor.background"];
+        Background = Application.Current.Resources.GetResource("editor.background");
         IsModified = false;
         InitializeComponent();
 
@@ -95,10 +95,10 @@ public class EditorTab : Panel
         var fontSize = Application.Current.Resources["editor.fontsize"];
         textEditor.FontSize = fontSize == null ? 14 : Convert.ToDouble(fontSize);
 
-        var background = (IBrush)Application.Current.Resources["editor.background"];
+        var background = Application.Current.Resources.GetResource("editor.background");
         textEditor.Background = background == null ? "#1f1f1f".GetColoredBrush() : background.ToString().GetColoredBrush();
 
-        textEditor.Foreground = (IBrush)Application.Current.Resources["editor.foreground"];
+        textEditor.Foreground = Application.Current.Resources.GetResource("editor.foreground");
     }
 
     public void Save()

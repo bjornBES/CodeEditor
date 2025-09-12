@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
+using TextMateSharp.Internal.Rules;
 using TextMateSharp.Themes;
 
 public class ThemeService
@@ -44,25 +45,35 @@ public class ThemeService
         }
     }
 
-    private static void ApplyThemeElement(IResourceDictionary resources, string key, ThemeElement element, string prefix)
+    private static void ApplyThemeElement(IResourceDictionary resources, string key, ThemeElement element, string prefix, ThemeElementRaw elementRaw = null)
     {
-        if (!string.IsNullOrEmpty(element.Background))
-            addResources(resources, $"{prefix}.background", ConvertHex(element.Background));
+        ThemeElement themeElement= element;
 
-        if (!string.IsNullOrEmpty(element.Foreground))
-            addResources(resources, $"{prefix}.foreground", ConvertHex(element.Foreground));
+        if (elementRaw != null && element == null)
+        {
+            themeElement = new ThemeElement()
+            {
+                Background = elementRaw.Background,
+                Foreground = elementRaw.Foreground,
+                SubElements = elementRaw.SubElements,
+            };
+        }
+        else
+        {
+            
+        }
 
-        if (!string.IsNullOrEmpty(element.HoverBackground))
-            addResources(resources, $"{prefix}.hoverBackground", ConvertHex(element.HoverBackground));
+        if (!string.IsNullOrEmpty(themeElement.Background))
+            addResources(resources, $"{prefix}.background", ConvertHex(themeElement.Background));
 
-        if (!string.IsNullOrEmpty(element.HoverForeground))
-            addResources(resources, $"{prefix}.hoverForeground", ConvertHex(element.HoverForeground));
+        if (!string.IsNullOrEmpty(themeElement.Foreground))
+            addResources(resources, $"{prefix}.foreground", ConvertHex(themeElement.Foreground));
 
         if (element.SubElements != null)
         {
             foreach (var sub in element.SubElements)
             {
-                ApplyThemeElement(resources, sub.Key, sub.Value, $"{prefix}.{sub.Key}");
+                ApplyThemeElement(resources, sub.Key, null, $"{prefix}.{sub.Key}", sub.Value);
             }
         }
     }
@@ -79,10 +90,10 @@ public class ThemeService
         }
     }
 
-    private static IBrush ConvertHex(string hex)
+    private static Color ConvertHex(string hex)
     {
-        if (string.IsNullOrWhiteSpace(hex)) return null;
+        if (string.IsNullOrWhiteSpace(hex)) return Color.Parse("#FF0000");
         if (!hex.StartsWith("#")) hex = "#" + hex;
-        return new SolidColorBrush(Color.Parse(hex));
+        return Color.Parse(hex);
     }
 }

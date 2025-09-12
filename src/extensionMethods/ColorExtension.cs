@@ -14,4 +14,8 @@ public static class ColorExtension
         if (!hex.StartsWith("#")) hex = "#" + hex;
         return SolidColorBrush.Parse(hex);
     }
+        public static SolidColorBrush ToBrush(this Color color)
+    {
+        return new SolidColorBrush(color);
+    }
 }

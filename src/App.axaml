@@ -3,17 +3,22 @@
              x:Class="App">
 
   <Application.Resources>
-    <!-- Pull from your JSON theme loader at runtime -->
-    <SolidColorBrush x:Key="button.background" Color="#0078d4"/>
-    <SolidColorBrush x:Key="button.foreground" Color="#ffffff"/>
-    <SolidColorBrush x:Key="button.hoverbackground"  Color="#026ec1"/>
-    <SolidColorBrush x:Key="button.background.click" Color="#005a9e"/>
+    <!-- Pull from your JSON theme loader at runtime
+    -->
+    <Color x:Key="button.hoverBackground">#000000</Color>
+    <Color x:Key="button.hoverForeground">#000000</Color>
+    <Color x:Key="button.pressedBackground">#000000</Color>
+    <Color x:Key="button.pressedForeground">#000000</Color>
+    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{DynamicResource button.hoverBackground}"/>
+    <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{DynamicResource button.hoverForeground}"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{DynamicResource button.pressedBackground}"/> <!-- pressed -->
+    <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{DynamicResource button.pressedForeground}"/> <!-- pressed -->
   </Application.Resources>
 
   <Application.Styles>
     <!-- Base theme
-    <FluentTheme/>
     -->
+    <FluentTheme/>
 
     <!-- AvaloniaEdit theme-->
     <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />

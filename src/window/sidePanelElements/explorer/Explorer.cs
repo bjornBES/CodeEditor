@@ -90,12 +90,8 @@ public class Explorer : SidePanelElement
 
     public override void UpdateSettings()
     {
-        button.Foreground = (IBrush)Application.Current.Resources["button.foreground"];
-        IBrush normalBackground = (IBrush)Application.Current.Resources["button.background"];
-        IBrush hoverBackground = (IBrush)Application.Current.Resources["button.hoverBackground"];
-
-        // button.Styles.Add(HoverStyleHelper.CreateHoverBackgroundStyle<Button>(normalBackground, hoverBackground));
-
-        textBlock.Foreground = (IBrush)Application.Current.Resources["sidePanel.foreground"];
+        button.Foreground = Application.Current.Resources.GetResource("button.foreground");
+        button.Background = Application.Current.Resources.GetResource("button.background");
+        textBlock.Foreground = Application.Current.Resources.GetResource("sidePanel.foreground");
     }
 }

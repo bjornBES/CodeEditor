@@ -48,6 +48,7 @@ public class MainWindow : Window
         rightSidePanel.UpdateSettings();
         string json = ThemeConverter.ConvertToVSCodeTheme(ThemeService.CurrentTheme);
         File.WriteAllText("./vscodeTemp.json", json);
+        Application.Current.Resources["Button.hoverBackground"] = Color.Parse("#FFFFFF");
     }
 
     public void InitializeComponent()
@@ -114,16 +115,16 @@ public class MainWindow : Window
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        IBrush normalBackground = (IBrush)Application.Current.Resources["button.background"];
-        IBrush hoverBackground = (IBrush)Application.Current.Resources["button.hoverbackground"];
 
-        TextBlock button = new TextBlock()
+        Button button = new Button()
         {
+            Content = "Hello world",
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Name = "testButton25",
         };
-        HoverStyleHelper.CreateHoverBackgroundStyle<TextBlock>(normalBackground, hoverBackground, button.Name);
+        // "#33FFFFFF";
+        // HoverStyleHelper.CreateHoverBackgroundStyle<Button>(normalBackground, hoverBackground, button.Name);
         Grid.SetColumn(button, 2);
         mainGrid.Children.Add(button);
 

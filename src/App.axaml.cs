@@ -51,6 +51,13 @@ public class App : Application
                                 new Setter(AreaButton.BackgroundProperty, Brushes.LightBlue)
                             }
                         },
+                        new Style(x => x.OfType<AreaButton>().Nesting().Class(":pointerover"))
+                        {
+                            Setters = {
+                                new Setter(AreaButton.ContentProperty, "Pointer over"),
+                                new Setter(AreaButton.BackgroundProperty, Brushes.LightBlue)
+                            }
+                        },
 
                         new Style(x => x.OfType<AreaButton>().Nesting().Class(":left"))
                         {

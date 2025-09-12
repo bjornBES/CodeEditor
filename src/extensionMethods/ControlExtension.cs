@@ -12,8 +12,8 @@ public static class ControlExtension
     }
     public static void AddHoverBackground(this TemplatedControl control, string normalKey, string hoverKey)
     {
-        IBrush normal = (IBrush)Application.Current.Resources[normalKey];
-        IBrush hover = (IBrush)Application.Current.Resources[hoverKey];
+        IBrush normal = Application.Current.Resources.GetResource(normalKey);
+        IBrush hover = Application.Current.Resources.GetResource(hoverKey);
         AddHoverBackground(control, normal, hover);
     }
 }

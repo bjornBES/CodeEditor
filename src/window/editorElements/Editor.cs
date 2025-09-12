@@ -15,7 +15,7 @@ public class Editor : Panel
 
     public void InitializeComponent()
     {
-        Background = (IBrush)Application.Current.Resources["editor.background"];
+        Background = Application.Current.Resources.GetResource("editor.background");
         editorPanels = new List<EditorPanel>(8);
         AddPanel();
     }
@@ -38,7 +38,7 @@ public class Editor : Panel
 
     public void UpdateSettings()
     {
-        Background = (IBrush)Application.Current.Resources["editor.background"];
+        Background = Application.Current.Resources.GetResource("editor.background");
         EditorPanel editorPanel = getCurrentPanel();
         editorPanel.UpdateSettings();
     }

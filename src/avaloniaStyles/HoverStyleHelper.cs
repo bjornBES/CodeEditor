@@ -17,7 +17,7 @@ public static class HoverStyleHelper
                     new Setter(Avalonia.Controls.Primitives.TemplatedControl.BackgroundProperty, normal),
                 },
                 Children = {
-                    new Style(x => x.OfType<T>().Nesting().Class(":pointerover"))
+                    new Style(x => x.OfType<T>().Name(name).Nesting().Class(":pointerover"))
                     {
                         Setters =
                         {
@@ -30,7 +30,3 @@ public static class HoverStyleHelper
 
     }
 }
-
-// Usage example:
-// var style = HoverStyleHelper.CreateHoverBackgroundStyle<Button>(Brushes.White, Brushes.LightBlue);
-// button.Styles.Add(style);

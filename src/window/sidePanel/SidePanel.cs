@@ -25,7 +25,7 @@ public class SidePanel : Grid
         Dock = dock;
         originalWidth = width;
 
-        Background = (IBrush)Application.Current.Resources["sidePanel.background"];
+        Background = Application.Current.Resources.GetResource("sidePanel.background");
 
         // Create a grid with two rows: button row and tab row
         RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // button
@@ -93,7 +93,7 @@ public class SidePanel : Grid
 
     public void UpdateSettings()
     {
-        Background = (IBrush)Application.Current.Resources["sidePanel.background"];
+        Background = Application.Current.Resources.GetResource("sidePanel.background");
 
         foreach (var item in panelElements)
         {
