@@ -2,7 +2,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using AvaloniaEdit.TextMate;
+using Avalonia.Styling;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Rules;
 using TextMateSharp.Themes;
@@ -12,6 +12,9 @@ public class ThemeService
     private static Theme _currentTheme;
 
     public static Theme CurrentTheme => _currentTheme;
+
+    public static readonly string[] EventIdent = ["hover", "clicked", "focus", "disabled"];
+    public static Styles themeStyles = new Styles();
 
     public static void SetTheme(string name, Editor editor)
     {
@@ -45,35 +48,41 @@ public class ThemeService
         }
     }
 
-    private static void ApplyThemeElement(IResourceDictionary resources, string key, ThemeElement element, string prefix, ThemeElementRaw elementRaw = null)
+    private static void ApplyThemeElement(IResourceDictionary resources, string key, ThemeElement element, string prefix)
     {
-        ThemeElement themeElement= element;
+        if (!string.IsNullOrEmpty(element.Background))
+            addResources(resources, $"{prefix}.background", ConvertHex(element.Background));
 
-        if (elementRaw != null && element == null)
+        if (!string.IsNullOrEmpty(element.Foreground))
+            addResources(resources, $"{prefix}.foreground", ConvertHex(element.Foreground));
+
+        if (element.Events != null)
         {
-            themeElement = new ThemeElement()
+            foreach (string eventKey in element.Events.Keys)
             {
-                Background = elementRaw.Background,
-                Foreground = elementRaw.Foreground,
-                SubElements = elementRaw.SubElements,
-            };
-        }
-        else
-        {
-            
-        }
 
-        if (!string.IsNullOrEmpty(themeElement.Background))
-            addResources(resources, $"{prefix}.background", ConvertHex(themeElement.Background));
+                ThemeEventElement eventElement = element.Events[eventKey];
 
-        if (!string.IsNullOrEmpty(themeElement.Foreground))
-            addResources(resources, $"{prefix}.foreground", ConvertHex(themeElement.Foreground));
+                if (eventKey == "focus")
+                {
+                    
+                }
+                if (EventIdent.Contains(eventKey))
+                {
+                    if (!string.IsNullOrEmpty(element.Background))
+                        addResources(resources, $"{prefix}.{eventKey}.background", ConvertHex(eventElement.Background));
+
+                    if (!string.IsNullOrEmpty(element.Foreground))
+                        addResources(resources, $"{prefix}.{eventKey}.foreground", ConvertHex(eventElement.Foreground));
+                }
+            }
+        }
 
         if (element.SubElements != null)
         {
             foreach (var sub in element.SubElements)
             {
-                ApplyThemeElement(resources, sub.Key, null, $"{prefix}.{sub.Key}", sub.Value);
+                ApplyThemeElement(resources, sub.Key, sub.Value, $"{prefix}.{sub.Key}");
             }
         }
     }
@@ -92,7 +101,7 @@ public class ThemeService
 
     private static Color ConvertHex(string hex)
     {
-        if (string.IsNullOrWhiteSpace(hex)) return Color.Parse("#FF0000");
+        if (string.IsNullOrWhiteSpace(hex)) return Color.Parse("#FF00FF");
         if (!hex.StartsWith("#")) hex = "#" + hex;
         return Color.Parse(hex);
     }

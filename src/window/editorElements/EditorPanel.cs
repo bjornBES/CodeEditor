@@ -3,7 +3,6 @@ using Avalonia.Layout;
 using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaEdit;
-using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
@@ -35,6 +34,9 @@ public class EditorPanel : Panel
             VerticalAlignment = VerticalAlignment.Stretch,
         };
         Children.Add(tabControl);
+
+        Focusable = true;
+        GotFocus += (sender, e) => { KeybindingManager.ActiveContext = "editor"; };
     }
 
     public void NewTab(string filePath)
@@ -168,6 +170,13 @@ public class EditorPanel : Panel
         }
     }
 
+    public void OnConfigChanged()
+    {
+        foreach (EditorTab tab in tabs)
+        {
+            tab.OnConfigChanged();
+        }
+    }
 
     public int TabCount => tabs.Count;
 }

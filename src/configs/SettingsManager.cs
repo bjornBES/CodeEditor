@@ -1,4 +1,5 @@
 
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 public class SettingsManager<T> where T : Settings<T>
@@ -8,6 +9,7 @@ public class SettingsManager<T> where T : Settings<T>
     public string GlobalPath;
     public string WorkspacePath;
 
+    public event Action OnConfigChanged;
     public SettingsManager(string path)
     {
         GlobalPath = path;
@@ -25,6 +27,8 @@ public class SettingsManager<T> where T : Settings<T>
     {
         Current = JsonSerializer.Deserialize<T>("{}");
     }
+
+
 
     public void Load()
     {
@@ -47,6 +51,7 @@ public class SettingsManager<T> where T : Settings<T>
             // Create default workspace file if missing
             SaveToFile(WorkspacePath, default);
         }
+        OnConfigChanged?.Invoke();
     }
 
     public void SaveGlobal()
@@ -95,6 +100,7 @@ public class SettingsManager<T> where T : Settings<T>
             string json = JsonSerializer.Serialize(configs, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, json);
         }
+        OnConfigChanged?.Invoke();
     }
 
     /// <summary>
@@ -104,5 +110,10 @@ public class SettingsManager<T> where T : Settings<T>
     public void MergeSettings(T baseConfig, T other)
     {
         baseConfig.MergeSettings(other);
+    }
+
+    public void ChangeLoaclPath(string path)
+    {
+        WorkspacePath = path;
     }
 }

@@ -69,6 +69,8 @@ public static class AppPaths
         ensureFileExist(GlobalConfigFilePath);
         ensureFileExist(KeybindingsFilePath);
         ensureFileExist(GlobalStorageFilePath);
+
+        KeybindingLoader.LoadKeybindings();
     }
 
     private static void ensureFileExist(string path)

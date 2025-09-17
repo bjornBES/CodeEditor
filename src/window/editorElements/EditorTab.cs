@@ -1,9 +1,11 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Search;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Themes.Reader;
@@ -53,9 +55,13 @@ public class EditorTab : Panel
         {
             ShowLineNumbers = true,
             FontSize = 14,
-            Foreground = (IBrush)Application.Current.Resources["editor.foreground"],
+            Foreground = Application.Current.Resources.GetResource("editor.foreground"),
             WordWrap = false,
         };
+        
+        TextAreaDefaultInputHandler inputHandler = textEditor.TextArea.DefaultInputHandler;
+        textEditor.TextArea.ActiveInputHandler = inputHandler;
+        List<KeyBinding> keyBindings = textEditor.KeyBindings;
 
         textEditor.TextChanged += OnTextChanged;
         textEditor.TextArea.TextEntered += (sender, e) =>
@@ -80,6 +86,15 @@ public class EditorTab : Panel
         }
 
         Children.Add(textEditor);
+
+        textEditor.GotFocus += (sender, e) => { KeybindingManager.ActiveContext = "editor"; };
+    }
+
+    public override void EndInit()
+    {
+        base.EndInit();
+                SearchPanel search = textEditor.SearchPanel;
+        search.CommandBindings.RemoveItem(ApplicationCommands.Find);
     }
 
     void OnTextChanged(object sender, EventArgs e)
@@ -89,12 +104,6 @@ public class EditorTab : Panel
 
     public void UpdateSettings()
     {
-        var fontFamily = Application.Current.Resources["editor.font"];
-        textEditor.FontFamily = fontFamily == null ? "Consolas" : fontFamily.ToString();
-
-        var fontSize = Application.Current.Resources["editor.fontsize"];
-        textEditor.FontSize = fontSize == null ? 14 : Convert.ToDouble(fontSize);
-
         var background = Application.Current.Resources.GetResource("editor.background");
         textEditor.Background = background == null ? "#1f1f1f".GetColoredBrush() : background.ToString().GetColoredBrush();
 
@@ -148,5 +157,14 @@ public class EditorTab : Panel
             string scope = registryOptions.GetScopeByLanguageId(Language.Id);
             textMateInstallation.SetGrammar(scope);
         }
+    }
+
+    public void OnConfigChanged()
+    {
+        var fontFamily = Application.Current.Resources["editor.font"];
+        textEditor.FontFamily = fontFamily == null ? "Consolas" : fontFamily.ToString();
+
+        var fontSize = Application.Current.Resources["editor.fontsize"];
+        textEditor.FontSize = fontSize == null ? 14 : Convert.ToDouble(fontSize);
     }
 }

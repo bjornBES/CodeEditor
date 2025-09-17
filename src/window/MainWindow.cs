@@ -1,11 +1,14 @@
 
 using System.ComponentModel;
+using System.Reactive;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using NativeFileDialogSharp;
+using ReactiveUI;
+using Tmds.DBus.Protocol;
 
 public enum DialogType
 {
@@ -23,10 +26,19 @@ public class MainWindow : Window
     Editor CodeEditor;
     SidePanel rightSidePanel;
 
+    TopPalette topPalette;
+
     Explorer explorer;
+
+    Canvas Overlay;
+    Panel topMenu;
 
     public MainWindow()
     {
+        CommandManager.RegisterCommand("Say Hello World", "helloworld", () => { DebugWriter.WriteLine("Window", "Hello world editor command"); });
+        CommandManager.RegisterCommand("Say Hello World", "helloworld.global", () => { DebugWriter.WriteLine("Window", "Hello world global command"); });
+
+        PixelSize screenSize = Screens.Primary.Bounds.Size;
         EditorConfigsSettingsManager = new SettingsManager<EditorConfigs>(AppPaths.WorkspaceConfigFilePath, AppPaths.GlobalConfigFilePath);
         GlobalStorageSettingsManager = new SettingsManager<GlobalStorageSettings>(AppPaths.GlobalStorageFilePath);
 
@@ -49,12 +61,39 @@ public class MainWindow : Window
         string json = ThemeConverter.ConvertToVSCodeTheme(ThemeService.CurrentTheme);
         File.WriteAllText("./vscodeTemp.json", json);
         Application.Current.Resources["Button.hoverBackground"] = Color.Parse("#FFFFFF");
+        Application.Current.Styles.Add(ThemeService.themeStyles);
+
+        EditorConfigsSettingsManager.OnConfigChanged += OnEditorConfigsChanged;
+
+        ReactiveCommand<Unit, Unit> OpenPaltteCommand = ReactiveCommand.Create(OpenPalette);
+        KeyBindings.Add(new KeyBinding() { Gesture = new KeyGesture(Key.P, KeyModifiers.Control | KeyModifiers.Shift), Command = OpenPaltteCommand });
+
+        SizeChanged += (sender, args) =>
+        {
+            if (topPalette != null)
+            {
+                Size topbarSize = topMenu.Bounds.Size;
+                topPalette.WindowChangedSize(args.NewSize, screenSize, topbarSize);
+
+                Size editorSize = CodeEditor.Bounds.Size;
+
+                Size leftSideSize = leftSidePanel.Bounds.Size;
+                Size rightSizeSize = rightSidePanel.Bounds.Size;
+                leftSidePanel.WindowChangedSize(args.NewSize, rightSizeSize);
+                rightSidePanel.WindowChangedSize(args.NewSize, leftSideSize);
+            }
+        };
+
+        CommandManager.RegisterCommand("Open file", "editor.open.file", CodeEditor.LoadFile);
     }
 
     public void InitializeComponent()
     {
         Width = 800;
         Height = 600;
+
+        MinWidth = 600;
+        MinHeight = 700;
         Title = "Code Editor";
 
         Application.Current.Resources.Add("editor.fontsize", EditorConfigsSettingsManager.Current.Editor.FontSize);
@@ -62,7 +101,46 @@ public class MainWindow : Window
 
         KeyDown += UpdateKeyDown;
 
-        Content = CreateLayout();
+        var rootGrid = new Grid
+        {
+            // Background = new SolidColorBrush(Color.Parse("#333333")) // window background
+            Background = Brushes.White, // window background
+        };
+        rootGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // top menu height
+        rootGrid.RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star))); // rest of window
+
+        topMenu = new Panel()
+        {
+            MinHeight = 40
+        };
+        Grid.SetRow(topMenu, 0);
+        rootGrid.Children.Add(topMenu);
+
+        DockPanel mainDock = new DockPanel()
+        {
+            Background = Brushes.Transparent,
+        };
+        Grid.SetRow(mainDock, 1);
+        rootGrid.Children.Add(mainDock);
+
+        Control mainContents = CreateLayout();
+        mainDock.Children.Add(mainContents);
+
+        Overlay = new Canvas
+        {
+            VerticalAlignment = VerticalAlignment.Top,
+            Background = Brushes.Transparent,
+            IsVisible = true // only visible when a submenu is open
+        };
+
+        topPalette = new TopPalette();
+        Overlay.Children.Add(topPalette);
+
+        // Overlay spans both rows
+        Grid.SetRowSpan(Overlay, 2);
+        rootGrid.Children.Add(Overlay);
+
+        Content = rootGrid;
 
         if (!string.IsNullOrEmpty(GlobalStorageSettingsManager.Current.DefaultTheme))
         {
@@ -106,27 +184,12 @@ public class MainWindow : Window
         mainGrid.Children.Add(leftSidePanel.Splitter);
 
         // Editor
-        CodeEditor = new Editor();
-        // Grid.SetColumn(CodeEditor, 2);
-        // mainGrid.Children.Add(CodeEditor);
-
-        StackPanel stackPanel = new StackPanel()
+        CodeEditor = new Editor()
         {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
+            Name = "Editor"
         };
-
-        Button button = new Button()
-        {
-            Content = "Hello world",
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Name = "testButton25",
-        };
-        // "#33FFFFFF";
-        // HoverStyleHelper.CreateHoverBackgroundStyle<Button>(normalBackground, hoverBackground, button.Name);
-        Grid.SetColumn(button, 2);
-        mainGrid.Children.Add(button);
+        Grid.SetColumn(CodeEditor, 2);
+        mainGrid.Children.Add(CodeEditor);
 
         // Right panel
         rightSidePanel = new SidePanel(Dock.Right);
@@ -205,8 +268,14 @@ public class MainWindow : Window
         {
             CodeEditor.IndentDocument();
         }
-    }
 
+        if (KeybindingManager.HandleKeyPress(e.Key, e.KeyModifiers))
+        {
+            e.Handled = true;
+        }
+
+        topPalette.OnKeyDownPalette(sender, e);
+    }
     bool isKeyDown(Key key, KeyEventArgs e, params KeyModifiers[] modifiers)
     {
         if (e.Key != key) return false;
@@ -219,7 +288,17 @@ public class MainWindow : Window
         return true;
     }
 
-    public string OpenDialog(DialogType type, string defaultPath = null)
+    public void OpenPalette()
+    {
+        topPalette.OpenPalette();
+    }
+
+    public void OnEditorConfigsChanged()
+    {
+        CodeEditor.OnConfigChanged();
+    }
+
+    public static string OpenDialog(DialogType type, string defaultPath = null)
     {
         DialogResult dialog;
         string result = "";

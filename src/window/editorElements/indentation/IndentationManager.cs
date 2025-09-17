@@ -21,7 +21,7 @@ public static class IndentationManager
         if (lineNumber <= 0 || lineNumber > document.LineCount)
             return;
 
-        var line = document.avaloniaDocument.GetLineByNumber(lineNumber);
+        DocumentLine line = document.avaloniaDocument.GetLineByNumber(lineNumber);
 
         IndentLine(languageId, document, line, tabSize, useTabs);
     }

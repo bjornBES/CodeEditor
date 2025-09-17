@@ -16,6 +16,8 @@ public class SidePanel : Grid
     private double originalWidth;
     private bool isCollapsed = false;
 
+    public double innerHeight;
+
     // Events
     public event Action Collapsed;
     public event Action Expanded;
@@ -24,8 +26,9 @@ public class SidePanel : Grid
     {
         Dock = dock;
         originalWidth = width;
+        MinWidth = 170;
 
-        Background = Application.Current.Resources.GetResource("sidePanel.background");
+        Background = Application.Current.Resources.GetResource("sidepanel.background");
 
         // Create a grid with two rows: button row and tab row
         RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // button
@@ -60,6 +63,14 @@ public class SidePanel : Grid
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Background = new SolidColorBrush(Colors.Gray)
         };
+
+        SizeChanged += (sender, args) =>
+        {
+            foreach (var item in panelElements)
+            {
+                item.ElementSize = args.NewSize - new Size(0, tabControl.Height / 2);
+            }
+        };
     }
 
     private ColumnDefinition parentColumn;
@@ -87,13 +98,14 @@ public class SidePanel : Grid
             Header = element.Header,
             Content = element
         };
+        element.GotFocus += (sender, e) => { KeybindingManager.ActiveContext = element.Header; };
         tabControl.Items.Add(tabItem);
         panelElements.Add(element);
     }
 
     public void UpdateSettings()
     {
-        Background = Application.Current.Resources.GetResource("sidePanel.background");
+        Background = Application.Current.Resources.GetResource("sidepanel.background");
 
         foreach (var item in panelElements)
         {
@@ -106,7 +118,7 @@ public class SidePanel : Grid
     {
         var col = column ?? parentColumn;
         if (col == null) return;
-        
+
         originalWidth = col.Width.Value;
         col.Width = new GridLength(0);
         Splitter.IsEnabled = false;
@@ -134,5 +146,27 @@ public class SidePanel : Grid
             Expand(parentColumn);
         else
             Collapse(parentColumn);
+    }
+
+    public void WindowChangedSize(Size windowSize, Size otherSideSize)
+    {
+        double availableWidth = windowSize.Width - otherSideSize.Width;
+
+        // Enforce min/max range
+        double maxAllowedWidth = availableWidth * 0.45d;
+        if (maxAllowedWidth < 170)
+        {
+            maxAllowedWidth = 170; // sidebar can't shrink below min
+        }
+
+        MaxWidth = maxAllowedWidth;
+        MinWidth = 170;
+
+        // Also apply to parent grid column if needed
+        if (parentColumn != null)
+        {
+            parentColumn.MaxWidth = MaxWidth;
+            parentColumn.MinWidth = MinWidth;
+        }
     }
 }

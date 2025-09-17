@@ -117,4 +117,12 @@ public class Editor : Panel
         EditorPanel editorPanel = getCurrentPanel(index);
         editorPanel.IndentCurrentDocument();
     }
+
+    public void OnConfigChanged()
+    {
+        foreach (EditorPanel editorPanel in editorPanels)
+        {
+            editorPanel.OnConfigChanged();
+        }
+    }
 }

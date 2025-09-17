@@ -2,13 +2,13 @@
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Utils;
 using TextMateSharp.Grammars;
-using AvaloniaEditTextDocument = AvaloniaEdit.Document.TextDocument;
+using AvaloniaEditTextDocument = AvaloniaEdit.Document;
 
 namespace API;
 
 public class TextDocument
 {
-    internal AvaloniaEditTextDocument avaloniaDocument;
+    internal AvaloniaEdit.Document.TextDocument avaloniaDocument;
     internal EditorTab editorTab;
 
     public string Encoding { get; private set; }

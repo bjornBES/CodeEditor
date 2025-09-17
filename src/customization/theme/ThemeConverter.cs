@@ -75,7 +75,8 @@ public static class ThemeConverter
         {
             foreach (var sub in element.SubElements)
             {
-                FlattenColors($"{prefix}.{sub.Key}", sub.Value, dict);
+                // TODO
+                // FlattenColors($"{prefix}.{sub.Key}", sub.Value, dict);
             }
         }
     }

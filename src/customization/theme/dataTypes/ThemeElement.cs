@@ -1,39 +1,26 @@
 using System.Formats.Asn1;
 using System.Text.Json.Serialization;
-
 public class ThemeElement
 {
+#nullable enable
     [JsonPropertyName("foreground")]
-    public string Foreground { get; set; }
+    public string? Foreground { get; set; }
     [JsonPropertyName("background")]
-    public string Background { get; set; }
+    public string? Background { get; set; }
 
     [JsonPropertyName("events")]
-    public ThemeEventOptions Events { get; set; }
+    public Dictionary<string, ThemeEventElement>? Events { get; set; }
 
     [JsonPropertyName("subElements")]
-    public Dictionary<string, ThemeElementRaw> SubElements { get; set; }
+    public Dictionary<string, ThemeElement>? SubElements { get; set; }
 }
 
-public class ThemeElementRaw
+public class ThemeEventElement
 {
-    [JsonPropertyName("foreground")]
-    public string Foreground { get; set; }
     [JsonPropertyName("background")]
-    public string Background { get; set; }
-    [JsonPropertyName("subElements")]
-    public Dictionary<string, ThemeElementRaw> SubElements { get; set; }
-}
-
-public class ThemeEventOptions
-{
-    [JsonPropertyName("clickedBackground")]
-    public string ClickedBackground { get; set; }
-    [JsonPropertyName("clickedForeground")]
-    public string ClickedForeground { get; set; }
-
-    [JsonPropertyName("hoverForeground")]
-    public string HoverForeground { get; set; }
-    [JsonPropertyName("hoverBackground")]
-    public string HoverBackground { get; set; }
+    public string? Background { get; set; }
+    [JsonPropertyName("foreground")]
+    public string? Foreground { get; set; }
+    [JsonPropertyName("fontStyle")]
+    public FontStyleOptions? FontStyleOptions { get; set; }
 }
