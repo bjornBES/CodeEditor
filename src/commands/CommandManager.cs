@@ -1,5 +1,6 @@
 
 using System.Text.Json;
+using lib.debug;
 
 public static class CommandManager
 {
@@ -9,6 +10,11 @@ public static class CommandManager
     public static void RegisterCommand(string commandName, string commandId, Delegate callback)
     {
         commandEntries.Add(new CommandEntry(commandName, commandId, callback));
+    }
+
+    public static CommandEntry GetCommandEntry(string commandId)
+    {
+        return commandEntries.FirstOrDefault(x => x.CommandId == commandId);
     }
 
     public static object ExecuteCommand(string commandId, params object[] args)

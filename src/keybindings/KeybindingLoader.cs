@@ -20,22 +20,11 @@ public static class KeybindingLoader
 
     private static bool TryParseKey(string keyString, out Key key, out KeyModifiers modifiers)
     {
-        modifiers = KeyModifiers.None;
-        key = Key.None;
+        KeyGesture gesture = KeyGesture.Parse(keyString);
 
-        var parts = keyString.Split('+', StringSplitOptions.RemoveEmptyEntries);
-        foreach (var part in parts)
-        {
-            switch (part.Trim().ToLowerInvariant())
-            {
-                case "ctrl": modifiers |= KeyModifiers.Control; break;
-                case "alt": modifiers |= KeyModifiers.Alt; break;
-                case "shift": modifiers |= KeyModifiers.Shift; break;
-                default:
-                    Enum.TryParse(part, true, out key);
-                    break;
-            }
-        }
+        modifiers = gesture.KeyModifiers;
+        key = gesture.Key;
+        
         return key != Key.None;
     }
 

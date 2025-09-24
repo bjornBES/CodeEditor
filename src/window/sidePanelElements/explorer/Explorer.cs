@@ -7,6 +7,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using DynamicData;
+using lib.debug;
 
 public class ExplorerNodeItem
 {

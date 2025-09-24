@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Layout;
 using Avalonia.Input;
+using lib.debug;
 
 public class TopPalette : StackPanel
 {

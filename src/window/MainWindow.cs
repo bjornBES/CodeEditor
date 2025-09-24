@@ -9,7 +9,7 @@ using Avalonia.Media;
 using NativeFileDialogSharp;
 using ReactiveUI;
 using Tmds.DBus.Protocol;
-
+using lib.debug;
 public enum DialogType
 {
     OpenFile,
@@ -17,7 +17,7 @@ public enum DialogType
     SelectFolder
 }
 
-public class MainWindow : Window
+public partial class MainWindow : Window
 {
     public static SettingsManager<EditorConfigs> EditorConfigsSettingsManager { get; set; }
     public static SettingsManager<GlobalStorageSettings> GlobalStorageSettingsManager { get; set; }
@@ -39,7 +39,7 @@ public class MainWindow : Window
         CommandManager.RegisterCommand("Say Hello World", "helloworld.global", () => { DebugWriter.WriteLine("Window", "Hello world global command"); });
 
         PixelSize screenSize = Screens.Primary.Bounds.Size;
-        EditorConfigsSettingsManager = new SettingsManager<EditorConfigs>(AppPaths.WorkspaceConfigFilePath, AppPaths.GlobalConfigFilePath);
+        EditorConfigsSettingsManager = new SettingsManager<EditorConfigs>("", AppPaths.GlobalConfigFilePath);
         GlobalStorageSettingsManager = new SettingsManager<GlobalStorageSettings>(AppPaths.GlobalStorageFilePath);
 
         EditorConfigsSettingsManager.Current.Editor = new EditorSection();
@@ -49,6 +49,7 @@ public class MainWindow : Window
         EditorConfigsSettingsManager.Current.Editor.InsertSpaces = true;
         EditorConfigsSettingsManager.Load();
 
+        KeybindingManager.AttachToWindow(this);
         AppPaths.EnsureDirectoriesExist();
         AppPaths.EnsureFilesExist();
 
@@ -84,7 +85,16 @@ public class MainWindow : Window
             }
         };
 
-        CommandManager.RegisterCommand("Open file", "editor.open.file", CodeEditor.LoadFile);
+        CommandManager.RegisterCommand("Open file", "editor.action.open.file", OpenFileDialog);
+        CommandManager.RegisterCommand("Increase Editor Font Size", "editor.action.increase.fontsize", CodeEditor.IncreaseEditorFontSize);
+        CommandManager.RegisterCommand("Decrease Editor Font Size", "editor.action.decrease.fontsize", CodeEditor.DecreaseEditorFontSize);
+        CommandManager.RegisterCommand("File: Save", "editor.action.file.save", SaveFile);
+        CommandManager.RegisterCommand("File: Save As...", "editor.action.file.saveAs", SaveFileAs);
+        CommandManager.RegisterCommand("File: New Untitled Text File", "editor.action.file.newUntitledFile", CodeEditor.NewTab);
+        CommandManager.RegisterCommand("View: Close Editor", "editor.action.closeActiveEditor", CodeEditor.CloseTab);
+        CommandManager.RegisterCommand("View: Toggle Primary Side Panel Visibility", "editor.action.primaryVisibility", rightSidePanel.Toggle);
+        CommandManager.RegisterCommand("View: Toggle Secondary Side Panel Visibility", "editor.action.secondaryVisibility", leftSidePanel.Toggle);
+        CommandManager.RegisterCommand("Format Document", "editor.action.formatDocument", IndentDocument);
     }
 
     public void InitializeComponent()
@@ -98,8 +108,6 @@ public class MainWindow : Window
 
         Application.Current.Resources.Add("editor.fontsize", EditorConfigsSettingsManager.Current.Editor.FontSize);
         Application.Current.Resources.Add("editor.font", EditorConfigsSettingsManager.Current.Editor.FontFamily);
-
-        KeyDown += UpdateKeyDown;
 
         var rootGrid = new Grid
         {
@@ -267,11 +275,6 @@ public class MainWindow : Window
         if (isKeyDown(Key.F, e, KeyModifiers.Control, KeyModifiers.Alt))
         {
             CodeEditor.IndentDocument();
-        }
-
-        if (KeybindingManager.HandleKeyPress(e.Key, e.KeyModifiers))
-        {
-            e.Handled = true;
         }
 
         topPalette.OnKeyDownPalette(sender, e);

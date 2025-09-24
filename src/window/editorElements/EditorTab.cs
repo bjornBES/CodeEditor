@@ -7,6 +7,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Search;
 using AvaloniaEdit.TextMate;
+using lib.debug;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Themes.Reader;
 using TextMateSharp.Registry;
@@ -58,10 +59,11 @@ public class EditorTab : Panel
             Foreground = Application.Current.Resources.GetResource("editor.foreground"),
             WordWrap = false,
         };
-        
-        TextAreaDefaultInputHandler inputHandler = textEditor.TextArea.DefaultInputHandler;
-        textEditor.TextArea.ActiveInputHandler = inputHandler;
-        List<KeyBinding> keyBindings = textEditor.KeyBindings;
+
+        Application.Current.Resources["SearchPanelBackgroundBrush"] = textEditor.Background;
+        Application.Current.Resources["SearchPanelBorderBrush"] = Application.Current.Resources.GetResource("editor.searchPanel.border.background");
+        Application.Current.Resources["BoxTextBackgroundBrush"] = Application.Current.Resources.GetResource("editor.searchPanel.textbox.background");
+        Application.Current.Resources["BoxTextForegroundBrush"] = Application.Current.Resources.GetResource("editor.searchPanel.textbox.foreground");
 
         textEditor.TextChanged += OnTextChanged;
         textEditor.TextArea.TextEntered += (sender, e) =>
@@ -71,6 +73,11 @@ public class EditorTab : Panel
                 var caret = textEditor.TextArea.Caret;
                 IndentationManager.IndentAfterEnter("csharp", TextDocument, caret.Line, 4, false);
             }
+        };
+
+        textEditor.KeyDown += (sender, e) =>
+        {
+            e.Handled = false;
         };
 
         TextDocument = new API.TextDocument();
@@ -93,8 +100,8 @@ public class EditorTab : Panel
     public override void EndInit()
     {
         base.EndInit();
-                SearchPanel search = textEditor.SearchPanel;
-        search.CommandBindings.RemoveItem(ApplicationCommands.Find);
+        // ApplicationCommands.Find.ChangeBinding(Key.F, KeyModifiers.Control);        
+        // search.CommandBindings.RemoveItem(ApplicationCommands.Find);
     }
 
     void OnTextChanged(object sender, EventArgs e)

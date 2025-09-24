@@ -9,6 +9,7 @@ using TextMateSharp.Themes;
 using System.Text.Json;
 using TextMateSharp.Internal.Themes.Reader;
 using AvaloniaEdit.Editing;
+using Avalonia.LogicalTree;
 
 public class EditorPanel : Panel
 {
@@ -49,10 +50,48 @@ public class EditorPanel : Panel
         {
             Header = tab.GetHeader(),
             Content = tab,
+            Background = Brushes.White,
+            FontSize = 16,
+            Height = 10,
         };
+
         tabControl.Items.Add(tabItem);
         tabControl.SelectedItem = tabItem;
+        CommandManager.RegisterCommand("testFontInc", "editor.tab.incfont", () =>
+        {
+            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
+            EditorTab contents = (EditorTab)tabControl.SelectedContent;
+            tabItem1.FontSize += 1;
+            UpdateTestHeader(tabItem1, contents);
+        });
+        CommandManager.RegisterCommand("testFontDec", "editor.tab.decfont", () =>
+        {
+            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
+            EditorTab contents = (EditorTab)tabControl.SelectedContent;
+            tabItem1.FontSize -= 1;
+            UpdateTestHeader(tabItem1, contents);
+        });
+        CommandManager.RegisterCommand("TestHeightInc", "editor.tab.heightinc", () =>
+        {
+            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
+            EditorTab contents = (EditorTab)tabControl.SelectedContent;
+            tabItem1.Height += 1;
+            UpdateTestHeader(tabItem1, contents);
+        });
+        CommandManager.RegisterCommand("TestHeightDec", "editor.tab.heightdec", () =>
+        {
+            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
+            EditorTab contents = (EditorTab)tabControl.SelectedContent;
+            tabItem1.Height -= 1;
+            UpdateTestHeader(tabItem1, contents);
+        });
     }
+
+    void UpdateTestHeader(TabItem tabItem, EditorTab tab)
+    {
+        tabItem.Header = tab.GetHeader() + $" : {tabItem.Width}x{tabItem.Height} {tabItem.FontSize}";
+    }
+
     public EditorTab NewTab()
     {
         var tab = new EditorTab();

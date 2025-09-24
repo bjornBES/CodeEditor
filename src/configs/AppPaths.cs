@@ -11,6 +11,8 @@ public static class AppPaths
 
     public static readonly string KeybindingsFilePath = Path.Combine(AppDataDirectoryPath, "keybindings.json");
 
+    public static readonly string KeyboardLayoutFilePath = Path.Combine(AppDataDirectoryPath, "keybindings.json");
+
     #region GlobalStoragePaths
     /// <summary>
     /// This is where the recent workspace/directory/files will be at
@@ -40,9 +42,9 @@ public static class AppPaths
     /// <summary>
     /// This is where the ativce workspace will be at
     /// </summary>
-    public static string WorkspaceDirectoryPath { get; private set; } = "/home/bjornbes/Desktop/FDriveDump/projects/project"; //fallback/temp workspace directory
+    public static string WorkspaceDirectoryPath { get; private set; } = ""; //fallback/temp workspace directory
 
-    public static string WorkspaceConfigFilePath => !string.IsNullOrEmpty(WorkspaceDirectoryPath) ? Path.Combine(WorkspaceDirectoryPath, "settings.json") : string.Empty;
+    public static string WorkspaceConfigFilePath => !string.IsNullOrEmpty(WorkspaceDirectoryPath) ? Path.Combine(WorkspaceDirectoryPath, ".editor", "settings.json") : string.Empty;
     #endregion
 
 

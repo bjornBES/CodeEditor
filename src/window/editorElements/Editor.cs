@@ -125,4 +125,20 @@ public class Editor : Panel
             editorPanel.OnConfigChanged();
         }
     }
+
+    public void IncreaseEditorFontSize()
+    {
+        int fontsize = (int)Application.Current.Resources["editor.fontsize"];
+        fontsize += 1;
+        Application.Current.Resources["editor.fontsize"] = fontsize;
+        UpdateSettings();
+    }
+    public void DecreaseEditorFontSize()
+    {
+        int fontsize = (int)Application.Current.Resources["editor.fontsize"];
+        fontsize -= 1;
+        if (fontsize <= 0) fontsize = 1;
+        Application.Current.Resources["editor.fontsize"] = fontsize;
+        UpdateSettings();
+    }
 }

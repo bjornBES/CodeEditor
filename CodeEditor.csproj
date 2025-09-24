@@ -3,15 +3,20 @@
   <ItemGroup>
     <ProjectReference Include="..\GlobalLibrary\GlobalLibrary.csproj" />
     <!--
+    <Compile Remove="CodeEditorLibrary/**"/>
     -->
-    <ProjectReference Include="../lib/AvaloniaEdit/src/AvaloniaEdit/AvaloniaEdit.csproj" />
-    <ProjectReference Include="../lib/AvaloniaEdit/src/AvaloniaEdit.TextMate/AvaloniaEdit.TextMate.csproj" />
+    <ProjectReference Include="../lib/AvaloniaEdit/src/AvaloniaEdit.csproj" />
+    <ProjectReference Include="../lib/AvaloniaEdit.TextMate/src/AvaloniaEdit.TextMate.csproj" />
+    <ProjectReference Include="../lib/debugConsole/src/debug.csproj" />
   
     <Reference Include="AvaloniaEdit">
-      <HintPath>../lib/AvaloniaEdit/src/AvaloniaEdit/bin/Debug/net9.0/AvaloniaEdit.dll</HintPath>
+      <HintPath>../lib/AvaloniaEdit/src/bin/Debug/net9.0/AvaloniaEdit.dll</HintPath>
     </Reference>
-    <Reference Include="AvaloniaEdit">
-      <HintPath>../lib/AvaloniaEdit/src/AvaloniaEdit.TextMate/bin/Debug/net9.0/AvaloniaEdit.TextMate.dll</HintPath>
+    <Reference Include="AvaloniaEdit.TextMate">
+      <HintPath>../lib/AvaloniaEdit.TextMate/src/bin/Debug/net9.0/AvaloniaEdit.TextMate.dll</HintPath>
+    </Reference>
+    <Reference Include="lib.debug">
+      <HintPath>../lib/debugConsole/src/bin/Debug/net9.0/debug.dll</HintPath>
     </Reference>
   </ItemGroup>
 
