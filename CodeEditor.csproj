@@ -20,6 +20,8 @@
     </Reference>
     
     <AvaloniaResource Include="src/avalonia/themes/**/*.xaml" />
+
+    <Compile Remove="Bigfile.cs"/>
   </ItemGroup>
 
   <ItemGroup>

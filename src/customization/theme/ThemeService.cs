@@ -36,10 +36,10 @@ public class ThemeService
     public static void SetRegistryOptions(Editor editor)
     {
         var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
-        foreach (var panel in editor.editorPanels)
-        {
-            panel.ApplyRegistryOptions(registryOptions);
-        }
+        // foreach (var panel in editor.editorPanels)
+        // {
+        //     panel.ApplyRegistryOptions(registryOptions);
+        // }
     }
 
     private static void ApplyUITheme(Theme theme)

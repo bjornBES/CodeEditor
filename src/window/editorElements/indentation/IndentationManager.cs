@@ -9,19 +9,19 @@ public static class IndentationManager
     public static void RegisterProvider(IIndentationProvider provider)
         => providers[provider.LanguageId] = provider;
 
-    public static void IndentLine(string languageId, API.TextDocument document, DocumentLine line, int tabSize, bool useTabs)
+    public static void IndentLine(string languageId, TextDocument document, DocumentLine line, int tabSize, bool useTabs)
     {
         if (providers.TryGetValue(languageId, out var provider))
-            provider.IndentLine(document.avaloniaDocument, line, tabSize, useTabs);
+            provider.IndentLine(document, line, tabSize, useTabs);
         else
-            new DefaultIndentationStrategy().IndentLine(document.avaloniaDocument, line);
+            new DefaultIndentationStrategy().IndentLine(document, line);
     }
-    public static void IndentAfterEnter(string languageId, API.TextDocument document, int lineNumber, int tabSize, bool useTabs)
+    public static void IndentAfterEnter(string languageId, TextDocument document, int lineNumber, int tabSize, bool useTabs)
     {
         if (lineNumber <= 0 || lineNumber > document.LineCount)
             return;
 
-        DocumentLine line = document.avaloniaDocument.GetLineByNumber(lineNumber);
+        DocumentLine line = document.GetLineByNumber(lineNumber);
 
         IndentLine(languageId, document, line, tabSize, useTabs);
     }

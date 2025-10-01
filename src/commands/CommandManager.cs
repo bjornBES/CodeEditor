@@ -5,7 +5,7 @@ using lib.debug;
 
 public static class CommandManager
 {
-    private static List<CommandEntry> commandEntries = new List<CommandEntry>();
+    public static List<CommandEntry> commandEntries = new List<CommandEntry>();
 
 
     public static void RegisterCommand(string commandName, string commandId, Delegate callback)
@@ -37,7 +37,7 @@ public static class CommandManager
 
         DebugWriter.WriteLine("Commands", $"seachList: Elapsed time {seachList.ElapsedMilliseconds} ms commandID = {commandId}");
         seachList.Stop();
-        return RunCommand(entry, commandId, args);
+        return RunCommand(entry, commandId, args.ToArray());
     }
 
     public static object ExecuteCommand(string commandId, params object[] args)

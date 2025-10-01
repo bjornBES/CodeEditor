@@ -101,7 +101,7 @@ public partial class MainWindow : Window
 
         CommandManager.RegisterCommand("Open file", "editor.action.open.file", OpenFileDialog);
         CommandManager.RegisterCommand("Open file", "editor.action.open", OpenFile);
-        CommandManager.RegisterCommand("Open file", "editor.action.open.folder", OpenFolder);
+        CommandManager.RegisterCommand("Open folder", "editor.action.open.folder", OpenFolder);
 
 
         CommandManager.RegisterCommand("Increase Editor Font Size", "editor.action.increase.fontsize", CodeEditor.IncreaseEditorFontSize);
@@ -118,6 +118,8 @@ public partial class MainWindow : Window
 
         CommandManager.RegisterCommand("Add control to Status bar", "view.status.add.text", StatusBar.AddText);
         CommandManager.RegisterCommand("Add control to Status bar", "view.status.add.button", StatusBar.AddButton);
+
+        CommandManager.RegisterCommand("Open Palette", "view.open.toppalette", OpenPalette);
 
         if (GlobalStorageSettingsManager.Current.RecentFolders.Count > 0)
         {
@@ -183,8 +185,8 @@ public partial class MainWindow : Window
 
         TopMenu.SetSubmenuHost(Overlay);
 
-        TopPalette = new TopPalette();
-        Overlay.Children.Add(TopPalette);
+        TopPalette = new TopPalette(Overlay);
+        TopPalette.AddElement(new CommandPalette());
 
         // Overlay spans both rows
         Grid.SetRowSpan(Overlay, 2);
@@ -199,6 +201,7 @@ public partial class MainWindow : Window
             {
                 e.Handled = true;
                 TopMenu.HideAllSubmenus();
+                TopPalette.ClosePalette();
             }
         };
     }
@@ -340,12 +343,13 @@ public partial class MainWindow : Window
 
     void UpdateKeyDown(object sender, KeyEventArgs e)
     {
+        /*
         if (isKeyDown(Key.O, e, KeyModifiers.Control))
         {
             string path = OpenDialog(DialogType.OpenFile);
             if (!string.IsNullOrEmpty(path))
             {
-                CodeEditor.LoadFile(path);
+                CodeEditor.OpenFile(path);
             }
         }
         if (isKeyDown(Key.OemPlus, e, KeyModifiers.Control))
@@ -392,6 +396,7 @@ public partial class MainWindow : Window
         {
             CodeEditor.IndentDocument();
         }
+        */
 
         TopPalette.OnKeyDownPalette(sender, e);
     }
@@ -409,7 +414,7 @@ public partial class MainWindow : Window
 
     public void OpenPalette()
     {
-        TopPalette.OpenPalette();
+        TopPalette.OpenPalette("cmd");
     }
 
     public void OnEditorConfigsChanged()

@@ -8,6 +8,7 @@ namespace API;
 
 public class TextDocument
 {
+    /*
     internal AvaloniaEdit.Document.TextDocument avaloniaDocument;
     internal EditorTab editorTab;
 
@@ -16,6 +17,7 @@ public class TextDocument
     public string FileName { get; private set; }
     public string FilePath { get; private set; }
 
-    public string LanguageId { get => editorTab.Language.Id; }
+    public string LanguageId { get => ""; }
     public int LineCount { get; private set; }
+    */
 }

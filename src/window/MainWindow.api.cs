@@ -25,7 +25,7 @@ public partial class MainWindow : Window
             GlobalStorageSettingsManager.Current.RecentFiles.Remove(path);
         }
         GlobalStorageSettingsManager.Current.RecentFiles.Add(path);
-        CodeEditor.LoadFile(path);
+        CodeEditor.OpenFile(path);
         GlobalStorageSettingsManager.SaveGlobal();
         return path;
     }
@@ -36,7 +36,7 @@ public partial class MainWindow : Window
             GlobalStorageSettingsManager.Current.RecentFiles.Remove(path);
         }
         GlobalStorageSettingsManager.Current.RecentFiles.Add(path);
-        CodeEditor.LoadFile(path);
+        CodeEditor.OpenFile(path);
         GlobalStorageSettingsManager.SaveGlobal();
         return path;
     }
@@ -73,7 +73,7 @@ public partial class MainWindow : Window
         {
             return;
         }
-        CodeEditor.SaveFile(path);
+        CodeEditor.SaveFileAs(path);
     }
     void IndentDocument()
     {

@@ -55,8 +55,8 @@ public class SidePanel : ControlElement<SidePanel>
         {
             Toggle();
         };
-        Grid.SetRow(toggleButton, 0);
-        mainGrid.Children.Add(toggleButton);
+        // Grid.SetRow(toggleButton, 0);
+        // mainGrid.Children.Add(toggleButton);
 
         // GridSplitter
         Splitter = new GridSplitter
@@ -97,11 +97,28 @@ public class SidePanel : ControlElement<SidePanel>
 
     public void AddItem(SidePanelElement element)
     {
+
         TabItem tabItem = new TabItem()
         {
             Header = element.Header,
-            Content = element
+            Content = element,
+            BorderThickness = new Thickness(0, 0, 0, 1),
+            Name = element.Header,
+            BorderBrush = Application.Current.Resources.GetResource("sidepanel.icon.border.background")
         };
+
+        tabItem.GotFocus += (sender, args) =>
+        {
+            tabItem.BorderBrush = Application.Current.Resources.GetResource("sidepanel.icon.border.selected.background");
+        };
+        tabItem.LostFocus += (sender, args) =>
+        {
+            tabItem.BorderBrush = Application.Current.Resources.GetResource("sidepanel.icon.border.background");
+        };
+        if (!string.IsNullOrEmpty(element.IconPath))
+        {
+            tabItem.Header = new Image() { Source = new Avalonia.Media.Imaging.Bitmap(element.IconPath), Width = 20, Height = 20 };
+        }
         element.GotFocus += (sender, e) => { KeybindingManager.ActiveContext = element.Header; };
         tabControl.Items.Add(tabItem);
         panelElements.Add(element);

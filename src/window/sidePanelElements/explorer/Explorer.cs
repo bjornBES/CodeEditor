@@ -49,6 +49,7 @@ public class Explorer : SidePanelElement
     public Explorer()
     {
         Header = "Explorer";
+        IconPath = "CodeEditor/Assets/Icons/explorer.png";
         InitializeComponent();
         Application.Current.Resources["TreeViewItemIndent"] = 2.0;
     }

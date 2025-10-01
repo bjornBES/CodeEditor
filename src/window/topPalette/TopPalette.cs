@@ -8,8 +8,11 @@ using lib.debug;
 
 public class TopPalette : ControlElement<TopPalette>
 {
-    public TopPalette()
+    List<TopPaletteElement> PaletteElements = new List<TopPaletteElement>();
+    Canvas Overlay;
+    public TopPalette(Canvas overlay)
     {
+        Overlay = overlay;
         InitializeComponent();
     }
 
@@ -51,15 +54,37 @@ public class TopPalette : ControlElement<TopPalette>
         {
             if (e.Key == Key.Escape)
             {
-                IsVisible = false;
+                ClosePalette();
             }
         }
     }
 
-    public void OpenPalette()
+    public void OpenPalette(string paletteName)
     {
+        Overlay.IsVisible = true;
         IsVisible = true;
-        Focus();
-        GotFocus += (sender, e) => { KeybindingManager.ActiveContext = "topPalette"; };
+        Overlay.Children.Add(this);
+
+        TopPaletteElement element = GetElement(paletteName);
+        element.ClosePalette += ClosePalette;
+        Children.Add(element);
+        element.OpenElement();
+    }
+
+    public void ClosePalette()
+    {
+        Overlay.Children.Remove(this);
+        Overlay.IsVisible = false;
+        IsVisible = false;
+    }
+
+    TopPaletteElement GetElement(string name)
+    {
+        return PaletteElements.FirstOrDefault(element => { return element.ElementName == name; });
+    }
+
+    public void AddElement(TopPaletteElement element)
+    {
+        PaletteElements.Add(element);
     }
 }
