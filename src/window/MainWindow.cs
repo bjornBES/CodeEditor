@@ -145,6 +145,12 @@ public partial class MainWindow : Window
         MinHeight = 700;
         Title = "Code Editor";
 
+        if (EditorConfigsSettingsManager.Current.Editor == null)
+        {
+            // TODO add in a default config file in some way 
+            EditorConfigsSettingsManager.Current.Editor = new EditorSection();
+        }
+
         Application.Current.Resources.Add("editor.fontsize", EditorConfigsSettingsManager.Current.Editor.FontSize);
         Application.Current.Resources.Add("editor.font", EditorConfigsSettingsManager.Current.Editor.FontFamily);
 

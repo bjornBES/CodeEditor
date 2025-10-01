@@ -6,6 +6,10 @@ public static class KeybindingLoader
 {
     public static void LoadKeybindings()
     {
+        if (!File.Exists(AppPaths.KeybindingsFilePath) || File.ReadAllText(AppPaths.KeybindingsFilePath).Trim().Length == 0)
+        {
+            return;
+        }
         var json = File.ReadAllText(AppPaths.KeybindingsFilePath);
         var bindings = JsonSerializer.Deserialize<List<KeybindingConfig>>(json);
 

@@ -7,7 +7,7 @@ public class EditorConfigs : Settings<EditorConfigs>
 {
     public EditorConfigs()
     {
-
+        Editor = new EditorSection();
     }
     [JsonPropertyName("editor")]
     public EditorSection Editor { get; set; }
