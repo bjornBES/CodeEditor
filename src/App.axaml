@@ -10,16 +10,28 @@
     <Color x:Key="button.hover.foreground">#000000</Color>
     <Color x:Key="button.clicked.background">#000000</Color>
     <Color x:Key="button.clicked.foreground">#000000</Color>
+    <Color x:Key="editor.tabs.background">#000000</Color>
+    <Color x:Key="editor.tabs.selected.background">#000000</Color>
+    <Color x:Key="editor.tabs.hover.background">#000000</Color>
+    <Color x:Key="editor.tabs.hover+selected.background">#000000</Color>
     <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="{DynamicResource button.hover.background}"/>
     <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{DynamicResource button.hover.foreground}"/>
     <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="{DynamicResource button.clicked.background}"/> <!-- pressed -->
     <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{DynamicResource button.clicked.foreground}"/> <!-- pressed -->
+
+    <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselected" Color="#FF0000"/>
+    <SolidColorBrush x:Key="TabItemHeaderBackgroundSelected" Color="#00FF00"/>
+    <SolidColorBrush x:Key="TabItemHeaderBackgroundUnselectedPointerOver" Color="#0000FF"/>
+    <SolidColorBrush x:Key="TabItemHeaderBackgroundSelectedPointerOver" Color="#FFFF00"/>
+    <!--
+    -->
   </Application.Resources>
 
   <Application.Styles>
     <!-- Base theme
-    -->
     <FluentTheme/>
+    -->
+    <StyleInclude Source="avares://CodeEditor/src/avalonia/themes/Fluent/FluentTheme.xaml" />
 
     <!-- AvaloniaEdit theme
     -->

@@ -4,9 +4,11 @@ using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 
-public class Editor : Panel
+public class Editor : ControlElement<Editor>
 {
     public List<EditorPanel> editorPanels;
+
+    private TextBlock colLineStatus;
 
     public Editor()
     {
@@ -15,8 +17,16 @@ public class Editor : Panel
 
     public void InitializeComponent()
     {
+        Initialize();
         Background = Application.Current.Resources.GetResource("editor.background");
         editorPanels = new List<EditorPanel>(8);
+
+        colLineStatus = new TextBlock()
+        {
+            Text = "Ln N, Col N",
+        };
+        CommandManager.ExecuteCommand("view.status.add.text", colLineStatus, Dock.Right);
+
         AddPanel();
     }
 
@@ -140,5 +150,13 @@ public class Editor : Panel
         if (fontsize <= 0) fontsize = 1;
         Application.Current.Resources["editor.fontsize"] = fontsize;
         UpdateSettings();
+    }
+    public void PinTab()
+    {
+        getCurrentPanel().PinTab();
+    }
+    public void UnpinTab()
+    {
+        getCurrentPanel().UnpinTab();
     }
 }

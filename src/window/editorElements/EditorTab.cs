@@ -13,7 +13,7 @@ using TextMateSharp.Internal.Themes.Reader;
 using TextMateSharp.Registry;
 using TextMateSharp.Themes;
 
-public class EditorTab : Panel
+public class EditorTab : ControlElement<EditorTab>
 {
     TextMate.Installation textMateInstallation;
     private TextEditor textEditor;
@@ -27,12 +27,36 @@ public class EditorTab : Panel
     public string TextBuffer => textEditor.Text;
     public Caret Caret => textEditor.TextArea.Caret;
 
+    public int TabPlacement { get; set; } = -1;
+    public bool IsPinned { get; set; } = false;
+    public bool IsTabFocused { get; private set; } = false;
+
+    public bool IsTextFocus { get => textEditor.IsFocused; }
+
+    public Action<int> GetFocusAction;
+    public Action<int> LostFocusAction;
+
     public EditorTab()
     {
+        Initialize();
         Background = Application.Current.Resources.GetResource("editor.background");
         IsModified = false;
         InitializeComponent();
+        // GotFocus += (sender, e) => { KeybindingManager.ActiveContext = "editor"; };
+        AddContext("activeEditorIsPinned", GetPropertyInfo(nameof(IsPinned)), this);
+        AddContext("editorTextFocus", GetPropertyInfo(nameof(IsTextFocus)), this);
+        AddContext("editorFocus", GetPropertyInfo(nameof(IsFocused)), this);
+    }
 
+    public void AttachedToControl(TabControl tabControl)
+    {
+        if (TabPlacement != -1)
+        {
+            return;
+        }
+
+        TabPlacement = tabControl.ItemCount;
+        DebugWriter.WriteLine("Editor", $"Tab placement = {TabPlacement}");
     }
 
     internal TextEditor GetEditor() => textEditor;
@@ -59,6 +83,7 @@ public class EditorTab : Panel
             Foreground = Application.Current.Resources.GetResource("editor.foreground"),
             WordWrap = false,
         };
+        GotFocus += (sender, e) => { KeybindingManager.ActiveContext = "editor";  };
 
         Application.Current.Resources["SearchPanelBackgroundBrush"] = textEditor.Background;
         Application.Current.Resources["SearchPanelBorderBrush"] = Application.Current.Resources.GetResource("editor.searchPanel.border.background");
@@ -73,6 +98,23 @@ public class EditorTab : Panel
                 var caret = textEditor.TextArea.Caret;
                 IndentationManager.IndentAfterEnter("csharp", TextDocument, caret.Line, 4, false);
             }
+            else if (e.Text == "{")
+            {
+                textEditor.TextArea.PerformTextInput("}");
+            }
+            else if (e.Text == "[")
+            {
+                textEditor.TextArea.PerformTextInput("]");
+            }
+            else if (e.Text == "(")
+            {
+                textEditor.TextArea.PerformTextInput(")");
+            }
+        };
+        textEditor.TextArea.OnCaretPositionChanged += (sender, e) =>
+        {
+            var caret = textEditor.TextArea.Caret;
+            colLineStatus.Text = $"Ln {caret.Line}, Col {caret.Column}";
         };
 
         textEditor.KeyDown += (sender, e) =>
@@ -94,7 +136,8 @@ public class EditorTab : Panel
 
         Children.Add(textEditor);
 
-        textEditor.GotFocus += (sender, e) => { KeybindingManager.ActiveContext = "editor"; };
+        textEditor.GotFocus += (sender, e) => { KeybindingManager.ActiveContext = "editor"; IsTabFocused = true; GetFocusAction.Invoke(TabPlacement); };
+        textEditor.LostFocus += (sender, e) => { IsTabFocused = false; LostFocusAction.Invoke(TabPlacement); };
     }
 
     public override void EndInit()
@@ -115,6 +158,8 @@ public class EditorTab : Panel
         textEditor.Background = background == null ? "#1f1f1f".GetColoredBrush() : background.ToString().GetColoredBrush();
 
         textEditor.Foreground = Application.Current.Resources.GetResource("editor.foreground");
+
+        textEditor.WordWrap = MainWindow.EditorConfigsSettingsManager.Current.Editor.WordWrap;
     }
 
     public void Save()
@@ -135,7 +180,14 @@ public class EditorTab : Panel
 
     public string GetHeader()
     {
-        return FileName;
+        string name = FileName;
+
+        if (IsPinned)
+        {
+            name = "P " + name;
+        }
+
+        return $"{name}";
     }
 
     public void LoadSyntaxHighlighting(RegistryOptions registryOptions)
@@ -173,5 +225,10 @@ public class EditorTab : Panel
 
         var fontSize = Application.Current.Resources["editor.fontsize"];
         textEditor.FontSize = fontSize == null ? 14 : Convert.ToDouble(fontSize);
+    }
+
+    public void PinTab()
+    {
+        CommandManager.ExecuteCommand("editor.action.pinEditor.index", TabPlacement);
     }
 }

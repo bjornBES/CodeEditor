@@ -10,6 +10,7 @@ using NativeFileDialogSharp;
 using ReactiveUI;
 using Tmds.DBus.Protocol;
 using lib.debug;
+using Avalonia.Interactivity;
 public enum DialogType
 {
     OpenFile,
@@ -22,16 +23,18 @@ public partial class MainWindow : Window
     public static SettingsManager<EditorConfigs> EditorConfigsSettingsManager { get; set; }
     public static SettingsManager<GlobalStorageSettings> GlobalStorageSettingsManager { get; set; }
 
-    SidePanel leftSidePanel;
-    Editor CodeEditor;
-    SidePanel rightSidePanel;
+    public SidePanel LeftSidePanel;
+    public Editor CodeEditor;
+    public SidePanel RightSidePanel;
 
-    TopPalette topPalette;
+    public TopPalette TopPalette;
 
-    Explorer explorer;
+    public Explorer Explorer;
 
-    Canvas Overlay;
-    Panel topMenu;
+    public Canvas Overlay;
+    public TopBar TopMenu;
+
+    public StatusBar StatusBar;
 
     public MainWindow()
     {
@@ -49,52 +52,86 @@ public partial class MainWindow : Window
         EditorConfigsSettingsManager.Current.Editor.InsertSpaces = true;
         EditorConfigsSettingsManager.Load();
 
+        GlobalStorageSettingsManager.Load();
+
         KeybindingManager.AttachToWindow(this);
         AppPaths.EnsureDirectoriesExist();
         AppPaths.EnsureFilesExist();
 
-        InitializeComponent();
+        if (!string.IsNullOrEmpty(GlobalStorageSettingsManager.Current.DefaultTheme))
+        {
+            SetTheme(GlobalStorageSettingsManager.Current.DefaultTheme);
+        }
+        Application.Current.Styles.Add(ThemeService.ThemeStyles);
 
-        SetTheme("normalDark");
-        CodeEditor.UpdateSettings();
-        leftSidePanel.UpdateSettings();
-        rightSidePanel.UpdateSettings();
-        string json = ThemeConverter.ConvertToVSCodeTheme(ThemeService.CurrentTheme);
-        File.WriteAllText("./vscodeTemp.json", json);
-        Application.Current.Resources["Button.hoverBackground"] = Color.Parse("#FFFFFF");
-        Application.Current.Styles.Add(ThemeService.themeStyles);
+        InitializeComponent();
+        ThemeService.SetRegistryOptions(CodeEditor);
+
+        UpdateSettings();
 
         EditorConfigsSettingsManager.OnConfigChanged += OnEditorConfigsChanged;
 
         ReactiveCommand<Unit, Unit> OpenPaltteCommand = ReactiveCommand.Create(OpenPalette);
         KeyBindings.Add(new KeyBinding() { Gesture = new KeyGesture(Key.P, KeyModifiers.Control | KeyModifiers.Shift), Command = OpenPaltteCommand });
 
+        bool firstTimePass = true;
         SizeChanged += (sender, args) =>
         {
-            if (topPalette != null)
+            if (TopPalette != null)
             {
-                Size topbarSize = topMenu.Bounds.Size;
-                topPalette.WindowChangedSize(args.NewSize, screenSize, topbarSize);
+                Size topbarSize = TopMenu.Bounds.Size;
+                TopPalette.WindowChangedSize(args.NewSize, screenSize, topbarSize);
 
                 Size editorSize = CodeEditor.Bounds.Size;
 
-                Size leftSideSize = leftSidePanel.Bounds.Size;
-                Size rightSizeSize = rightSidePanel.Bounds.Size;
-                leftSidePanel.WindowChangedSize(args.NewSize, rightSizeSize);
-                rightSidePanel.WindowChangedSize(args.NewSize, leftSideSize);
+                Size leftSideSize = LeftSidePanel.Bounds.Size;
+                Size rightSizeSize = RightSidePanel.Bounds.Size;
+                LeftSidePanel.WindowChangedSize(args.NewSize, rightSizeSize);
+                RightSidePanel.WindowChangedSize(args.NewSize, leftSideSize);
+
+                if (firstTimePass == true)
+                {
+                    LeftSidePanel.UpdateSettings();
+                    RightSidePanel.UpdateSettings();
+                    Explorer.UpdateTreeContents();
+                    firstTimePass = false;
+                }
             }
         };
 
         CommandManager.RegisterCommand("Open file", "editor.action.open.file", OpenFileDialog);
+        CommandManager.RegisterCommand("Open file", "editor.action.open", OpenFile);
+        CommandManager.RegisterCommand("Open file", "editor.action.open.folder", OpenFolder);
+
+
         CommandManager.RegisterCommand("Increase Editor Font Size", "editor.action.increase.fontsize", CodeEditor.IncreaseEditorFontSize);
         CommandManager.RegisterCommand("Decrease Editor Font Size", "editor.action.decrease.fontsize", CodeEditor.DecreaseEditorFontSize);
         CommandManager.RegisterCommand("File: Save", "editor.action.file.save", SaveFile);
         CommandManager.RegisterCommand("File: Save As...", "editor.action.file.saveAs", SaveFileAs);
         CommandManager.RegisterCommand("File: New Untitled Text File", "editor.action.file.newUntitledFile", CodeEditor.NewTab);
         CommandManager.RegisterCommand("View: Close Editor", "editor.action.closeActiveEditor", CodeEditor.CloseTab);
-        CommandManager.RegisterCommand("View: Toggle Primary Side Panel Visibility", "editor.action.primaryVisibility", rightSidePanel.Toggle);
-        CommandManager.RegisterCommand("View: Toggle Secondary Side Panel Visibility", "editor.action.secondaryVisibility", leftSidePanel.Toggle);
+        CommandManager.RegisterCommand("View: Toggle Primary Side Panel Visibility", "editor.action.primaryVisibility", RightSidePanel.Toggle);
+        CommandManager.RegisterCommand("View: Toggle Secondary Side Panel Visibility", "editor.action.secondaryVisibility", LeftSidePanel.Toggle);
         CommandManager.RegisterCommand("Format Document", "editor.action.formatDocument", IndentDocument);
+        CommandManager.RegisterCommand("View: Pin editor", "editor.action.pinEditor", PinTab);
+        CommandManager.RegisterCommand("View: Unpin editor", "editor.action.unpinEditor", UnpinTab);
+
+        CommandManager.RegisterCommand("Add control to Status bar", "view.status.add.text", StatusBar.AddText);
+        CommandManager.RegisterCommand("Add control to Status bar", "view.status.add.button", StatusBar.AddButton);
+
+        if (GlobalStorageSettingsManager.Current.RecentFolders.Count > 0)
+        {
+            for (int i = 0; i < GlobalStorageSettingsManager.Current.RecentFolders.Count; i++)
+            {
+                string item = GlobalStorageSettingsManager.Current.RecentFolders[i];
+                if (!Directory.Exists(item))
+                {
+                    continue;
+                }
+                CommandManager.ExecuteCommand("editor.action.open.folder", item);
+            }
+
+        }
     }
 
     public void InitializeComponent()
@@ -117,12 +154,15 @@ public partial class MainWindow : Window
         rootGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // top menu height
         rootGrid.RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star))); // rest of window
 
-        topMenu = new Panel()
+        TopMenu = new TopBar()
         {
-            MinHeight = 40
+            IsVisible = true,
+            Height = 32
         };
-        Grid.SetRow(topMenu, 0);
-        rootGrid.Children.Add(topMenu);
+        Grid.SetRow(TopMenu, 0);
+        rootGrid.Children.Add(TopMenu);
+
+        BuildMenu();
 
         DockPanel mainDock = new DockPanel()
         {
@@ -141,8 +181,10 @@ public partial class MainWindow : Window
             IsVisible = true // only visible when a submenu is open
         };
 
-        topPalette = new TopPalette();
-        Overlay.Children.Add(topPalette);
+        TopMenu.SetSubmenuHost(Overlay);
+
+        TopPalette = new TopPalette();
+        Overlay.Children.Add(TopPalette);
 
         // Overlay spans both rows
         Grid.SetRowSpan(Overlay, 2);
@@ -150,12 +192,73 @@ public partial class MainWindow : Window
 
         Content = rootGrid;
 
-        if (!string.IsNullOrEmpty(GlobalStorageSettingsManager.Current.DefaultTheme))
-        {
-            ThemeService.SetTheme(GlobalStorageSettingsManager.Current.DefaultTheme, CodeEditor);
-        }
-
         Closed += OnWindowClosed;
+        PointerPressed += (s, e) =>
+        {
+            if (Overlay.IsVisible == true && Overlay.IsPointerOver == false)
+            {
+                e.Handled = true;
+                TopMenu.HideAllSubmenus();
+            }
+        };
+    }
+
+    void BuildMenu()
+    {
+        TopBarMenu fileMenu = TopMenu.AddMenu("File");
+        fileMenu.AddItem("New File", () => { DebugWriter.WriteLine("Main", $"New file"); });
+
+        TopBarMenu openReacentSubMenu = fileMenu.AddSubMenu("Open Reacent");
+        openReacentSubMenu.AddItem("Reopen closed Editors", () => { });
+        if (GlobalStorageSettingsManager.Current.RecentFolders.Count > 0)
+        {
+            openReacentSubMenu.AddSeparator();
+            List<string> recentFolders = GlobalStorageSettingsManager.Current.RecentFolders;
+            foreach (string folder in recentFolders)
+            {
+                openReacentSubMenu.AddItem(folder, () => { CommandManager.ExecuteCommand("editor.action.open.folder", folder); });
+            }
+        }
+        if (GlobalStorageSettingsManager.Current.RecentWorkspaces.Count > 0)
+        {
+            openReacentSubMenu.AddSeparator();
+            List<string> recentFolders = GlobalStorageSettingsManager.Current.RecentWorkspaces;
+            foreach (string folder in recentFolders)
+            {
+                openReacentSubMenu.AddItem(folder, () => { CommandManager.ExecuteCommand("editor.action.open.folder", folder); });
+            }
+        }
+        openReacentSubMenu.AddSeparator();
+        openReacentSubMenu.AddItem("More...", () => { });
+        openReacentSubMenu.AddSeparator();
+        openReacentSubMenu.AddItem("Clear Recently Opened...", () =>
+        {
+            GlobalStorageSettingsManager.Current.RecentFiles.Clear();
+            GlobalStorageSettingsManager.Current.RecentFolders.Clear();
+            GlobalStorageSettingsManager.Current.RecentWorkspaces.Clear();
+            GlobalStorageSettingsManager.SaveGlobal();
+        });
+
+        TopBarMenu EditMenu = TopMenu.AddMenu("Edit");
+
+        TopBarMenu SelectionMenu = TopMenu.AddMenu("Selection");
+
+        TopBarMenu ViewMenu = TopMenu.AddMenu("View");
+
+        TopBarMenu HelpMenu = TopMenu.AddMenu("Help");
+        
+    }
+
+    public override void EndInit()
+    {
+        base.EndInit();
+        UpdateSettings();
+    }
+
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+        UpdateSettings();
     }
 
     public void OnWindowClosed(object sender, EventArgs e)
@@ -174,50 +277,63 @@ public partial class MainWindow : Window
         mainGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));     // Right splitter
         mainGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(250))); // Right panel
 
+        mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // Other
+        mainGrid.RowDefinitions.Add(new RowDefinition(new GridLength(20))); // Status bar
+
 
         // Left panel
-        leftSidePanel = new SidePanel(Dock.Left);
+        LeftSidePanel = new SidePanel(Dock.Left);
 
-        explorer = new Explorer();
-        leftSidePanel.AddItem(explorer);
-        leftSidePanel.AddItem("Search", new TextBlock { Text = "Search content" });
-        Grid.SetColumn(leftSidePanel, 0);
-        mainGrid.Children.Add(leftSidePanel);
+        Explorer = new Explorer();
+        LeftSidePanel.AddItem(Explorer);
+        LeftSidePanel.AddItem("Search", new TextBlock { Text = "Search content" });
+        Grid.SetRow(LeftSidePanel, 0);
+        Grid.SetColumn(LeftSidePanel, 0);
+        mainGrid.Children.Add(LeftSidePanel);
 
         // Attach panel to its parent column so collapse/expand works automatically
-        leftSidePanel.AttachToColumn(mainGrid.ColumnDefinitions[0]);
+        LeftSidePanel.AttachToColumn(mainGrid.ColumnDefinitions[0]);
 
         // Add splitter from SidePanel to parent Grid
-        Grid.SetColumn(leftSidePanel.Splitter, 1);
-        mainGrid.Children.Add(leftSidePanel.Splitter);
+        Grid.SetRow(LeftSidePanel.Splitter, 0);
+        Grid.SetColumn(LeftSidePanel.Splitter, 1);
+        mainGrid.Children.Add(LeftSidePanel.Splitter);
 
         // Editor
         CodeEditor = new Editor()
         {
             Name = "Editor"
         };
+        Grid.SetRow(CodeEditor, 0);
         Grid.SetColumn(CodeEditor, 2);
         mainGrid.Children.Add(CodeEditor);
 
         // Right panel
-        rightSidePanel = new SidePanel(Dock.Right);
-        rightSidePanel.AddItem("Outline", new TextBlock { Text = "Outline content" });
-        rightSidePanel.AddItem("Properties", new TextBlock { Text = "Properties content" });
-        Grid.SetColumn(rightSidePanel, 4);
-        mainGrid.Children.Add(rightSidePanel);
+        RightSidePanel = new SidePanel(Dock.Right);
+        RightSidePanel.AddItem("Outline", new TextBlock { Text = "Outline content" });
+        RightSidePanel.AddItem("Properties", new TextBlock { Text = "Properties content" });
+        Grid.SetRow(RightSidePanel, 0);
+        Grid.SetColumn(RightSidePanel, 4);
+        mainGrid.Children.Add(RightSidePanel);
 
         // Add right splitter
-        Grid.SetColumn(rightSidePanel.Splitter, 3);
-        mainGrid.Children.Add(rightSidePanel.Splitter);
+        Grid.SetRow(RightSidePanel.Splitter, 0);
+        Grid.SetColumn(RightSidePanel.Splitter, 3);
+        mainGrid.Children.Add(RightSidePanel.Splitter);
 
-        rightSidePanel.AttachToColumn(mainGrid.ColumnDefinitions[4]);
+        RightSidePanel.AttachToColumn(mainGrid.ColumnDefinitions[4]);
+
+        StatusBar = new StatusBar();
+        Grid.SetRow(StatusBar, 1);
+        Grid.SetColumnSpan(StatusBar, 5);
+        mainGrid.Children.Add(StatusBar);
 
         return mainGrid;
     }
 
     public void SetTheme(string theme)
     {
-        ThemeService.SetTheme(theme, CodeEditor);
+        ThemeService.SetTheme(theme);
         GlobalStorageSettingsManager.Current.DefaultTheme = theme;
         GlobalStorageSettingsManager.SaveGlobal();
     }
@@ -266,18 +382,18 @@ public partial class MainWindow : Window
         }
         if (isKeyDown(Key.B, e, KeyModifiers.Control))
         {
-            rightSidePanel.Toggle();
+            RightSidePanel.Toggle();
         }
         if (isKeyDown(Key.B, e, KeyModifiers.Control, KeyModifiers.Alt))
         {
-            leftSidePanel.Toggle();
+            LeftSidePanel.Toggle();
         }
         if (isKeyDown(Key.F, e, KeyModifiers.Control, KeyModifiers.Alt))
         {
             CodeEditor.IndentDocument();
         }
 
-        topPalette.OnKeyDownPalette(sender, e);
+        TopPalette.OnKeyDownPalette(sender, e);
     }
     bool isKeyDown(Key key, KeyEventArgs e, params KeyModifiers[] modifiers)
     {
@@ -293,12 +409,20 @@ public partial class MainWindow : Window
 
     public void OpenPalette()
     {
-        topPalette.OpenPalette();
+        TopPalette.OpenPalette();
     }
 
     public void OnEditorConfigsChanged()
     {
         CodeEditor.OnConfigChanged();
+    }
+
+    public void UpdateSettings()
+    {
+        CodeEditor.UpdateSettings();
+        LeftSidePanel.UpdateSettings();
+        RightSidePanel.UpdateSettings();
+        StatusBar.UpdateSettings();
     }
 
     public static string OpenDialog(DialogType type, string defaultPath = null)
@@ -322,5 +446,10 @@ public partial class MainWindow : Window
         }
 
         return result;
+    }
+
+    public override void Show()
+    {
+        base.Show();
     }
 }

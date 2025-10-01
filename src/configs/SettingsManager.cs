@@ -116,4 +116,9 @@ public class SettingsManager<T> where T : Settings<T>
     {
         WorkspacePath = path;
     }
+
+    public void RunOnConfigChanged()
+    {
+        OnConfigChanged?.Invoke();
+    }
 }

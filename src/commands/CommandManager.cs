@@ -1,4 +1,5 @@
 
+using System.Diagnostics;
 using System.Text.Json;
 using lib.debug;
 
@@ -17,6 +18,28 @@ public static class CommandManager
         return commandEntries.FirstOrDefault(x => x.CommandId == commandId);
     }
 
+    public static object ExecuteCommandGetArgs(string commandId)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        CommandEntry entry = null;
+
+        Stopwatch seachList = Stopwatch.StartNew();
+        foreach (CommandEntry k in commandEntries)
+        {
+            if (k.CommandId == commandId)
+            {
+                entry = k;
+                break;
+            }
+        }
+
+        List<object> args = new List<object>();
+
+        DebugWriter.WriteLine("Commands", $"seachList: Elapsed time {seachList.ElapsedMilliseconds} ms commandID = {commandId}");
+        seachList.Stop();
+        return RunCommand(entry, commandId, args);
+    }
+
     public static object ExecuteCommand(string commandId, params object[] args)
     {
         CommandEntry entry = null;
@@ -29,6 +52,7 @@ public static class CommandManager
                     }
                 }
         */
+        Stopwatch seachList = Stopwatch.StartNew();
         foreach (CommandEntry k in commandEntries)
         {
             if (k.CommandId == commandId)
@@ -43,7 +67,14 @@ public static class CommandManager
                 }
             }
         }
+        DebugWriter.WriteLine("Commands", $"seachList: Elapsed time {seachList.ElapsedMilliseconds} ms commandID = {commandId}");
+        seachList.Stop();
+        return RunCommand(entry, commandId, args);
+    }
 
+    public static object RunCommand(CommandEntry entry, string commandId, params object[] args)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
         if (entry == null)
         {
             return null;
@@ -63,7 +94,14 @@ public static class CommandManager
                         return null; // Or some appropriate response
             */
         }
+        object returnResult = entry.Callback.DynamicInvoke(args);
 
-        return entry.Callback.DynamicInvoke(args);
+        if (commandId.StartsWith("editor"))
+        {
+            MainWindow.EditorConfigsSettingsManager.RunOnConfigChanged();
+        }
+        stopwatch.Stop();
+        DebugWriter.WriteLine("Commands", $"ExecuteCommand: Elapsed time {stopwatch.ElapsedMilliseconds} ms commandID = {commandId}");
+        return returnResult;
     }
 }

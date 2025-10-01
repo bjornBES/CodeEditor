@@ -1,5 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Reactive;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -8,68 +10,23 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using DynamicData;
 using lib.debug;
-
-public class ExplorerNodeItem
-{
-    public StackPanel HeaderPanel;
-
-    public StackPanel CreateLayout(ExplorerNode explorerNode, StackPanel childrenPanel)
-    {
-        HeaderPanel = new StackPanel()
-        {
-            Orientation = Orientation.Horizontal,
-            IsVisible = true,
-        };
-
-        TextBlock header = new TextBlock()
-        {
-            Text = explorerNode.Header,
-            Foreground = Application.Current.Resources.GetResource("sidepanel.foreground"),
-            IsVisible = true,
-        };
-
-        Button HeaderButton = new Button()
-        {
-            Content = header,
-        };
-
-        HeaderButton.Click += (s, e) =>
-        {
-            DebugWriter.WriteLine("Explorer", $"Selected: {explorerNode.Path}");
-            if (!explorerNode.IsDirectory)
-            {
-                if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                {
-                    CommandManager.ExecuteCommand("editor.open.file", explorerNode.Path);
-                }
-            }
-            else
-            {
-                explorerNode.IsExpanded = !explorerNode.IsExpanded;
-                // toggle.Text = explorerNode.IsExpanded ? "-" : "+";
-                childrenPanel.IsVisible = explorerNode.IsExpanded;
-            }
-        };
-
-        HeaderPanel.Children.Add(HeaderButton);
-
-        return HeaderPanel;
-    }
-}
+using ReactiveUI;
 
 public class ExplorerNode
 {
     public string Header { get; set; }
     public string Path { get; set; }
-    public int Level { get; set; } = 0;
-    public bool IsExpanded { get; set; } = false;
     public List<ExplorerNode> Children { get; set; } = new List<ExplorerNode>();
     public bool IsDirectory { get; set; }
 }
-
 public class Explorer : SidePanelElement
 {
     public string WorkspacePath;
+
+    ContextMenu treeItemMenu;
+
+    TreeView treeView;
+    ScrollViewer scrollViewer;
 
     StackPanel MainPanel;
 
@@ -81,18 +38,25 @@ public class Explorer : SidePanelElement
     TextBlock textBlock;
     Button button;
 
+    // ScrollViewer scroll;
+
 
     /// <summary>
     /// This will visible if the <see cref="WorkspacePath"/> is not <seealso cref="string.IsNullOrEmpty(string?)"/>
     /// </summary>
     Border FileExplore;
 
-    private int IndentStep = 16;
     public Explorer()
     {
         Header = "Explorer";
         InitializeComponent();
         Application.Current.Resources["TreeViewItemIndent"] = 2.0;
+    }
+
+    public override void EndInit()
+    {
+        UpdateTreeContents();
+        base.EndInit();
     }
 
     public void InitializeComponent()
@@ -117,6 +81,7 @@ public class Explorer : SidePanelElement
 
         button = new Button()
         {
+            Name = "explorerButton",
             Margin = new Thickness(0, 10),
             HorizontalAlignment = HorizontalAlignment.Center,
             Content = "Open Folder",
@@ -135,7 +100,63 @@ public class Explorer : SidePanelElement
         Children.Add(FolderNotOpened);
         Children.Add(FileExplore);
 
+        treeView = new TreeView()
+        {
+            IsVisible = true,
+            SelectionMode = SelectionMode.Multiple,
+        };
+        scrollViewer = new ScrollViewer()
+        {
+            IsVisible = true,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
+            AllowAutoHide = true,
+        };
+        treeView.SelectionChanged += (s, e) =>
+        {
+            if (treeView.SelectedItem == null)
+            {
+                return;
+            }
+            TreeViewItem viewItem = (TreeViewItem)treeView.SelectedItem;
+            ExplorerNode explorerNode = (ExplorerNode)viewItem.Tag;
+            if (explorerNode.IsDirectory)
+            {
+                e.Handled = true;
+                viewItem.IsExpanded = !viewItem.IsExpanded;
+            }
+            else
+            {
+                e.Handled = true;
+                CommandManager.ExecuteCommand("editor.action.open", explorerNode.Path);
+            }
+        };
+
+        treeItemMenu = new ContextMenu()
+        {
+        };
+        ReactiveCommand<string, Unit> command;
+        command = ReactiveCommand.Create<string>(PerformCommand);
+        treeItemMenu.Items.Add(new MenuItem()
+        {
+            Command = command,
+            CommandParameter = "helloworld",
+            Header = "Hello world"
+        });
+
         UpdateExplore();
+    }
+
+    void PerformCommand(string commandId)
+    {
+        CommandEntry commandEntry = CommandManager.GetCommandEntry(commandId);
+        if (commandEntry == null)
+        {
+            DebugWriter.WriteLine("KeybindingManager", $"command Entry is null from {commandId}");
+            throw new ArgumentNullException("commandEntry");
+        }
+
+        CommandManager.ExecuteCommandGetArgs(commandId);
     }
 
     public void UpdateExplore()
@@ -152,44 +173,66 @@ public class Explorer : SidePanelElement
         }
     }
 
-    public void OpenFolder()
+    public void OpenFolder(string path = "")
     {
-        string path = MainWindow.OpenDialog(DialogType.SelectFolder);
+        Stopwatch stopwatch = Stopwatch.StartNew();
         if (string.IsNullOrEmpty(path))
         {
-            return;
+            path = MainWindow.OpenDialog(DialogType.SelectFolder);
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+            CommandManager.ExecuteCommand("editor.action.open.folder", path);
         }
+
+        AppPaths.SetWorkspacePath(path);
         WorkspacePath = path;
         DebugWriter.WriteLine("Explorer", $"Opened Workspace: {WorkspacePath}");
-        AppPaths.SetWorkspacePath(path);
-        MainWindow.EditorConfigsSettingsManager.ChangeLoaclPath(AppPaths.WorkspaceConfigFilePath);
-        MainWindow.EditorConfigsSettingsManager.Load();
-
         UpdateExplore();
         UpdateTreeContents();
+        stopwatch.Stop();
+        DebugWriter.WriteLine("Explorer", $"OpenFolder: Elapsed {stopwatch.ElapsedMilliseconds} ms path = {path}");
     }
 
     public void UpdateTreeContents()
     {
-        ExplorerNode rootNode = BuildNode(WorkspacePath);
-        Control control = BuildNodeContents(rootNode, 0);
-        ScrollViewer scroll = new ScrollViewer()
-        {
-            Content = control,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Visible,
-            Height = ElementSize.Height,
-        };
-        FileExplore.Child = scroll;
+        treeView.Items.Clear();
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        Stopwatch build = Stopwatch.StartNew();
+        ExplorerNode rootNode = BuildNode(WorkspacePath, true);
+        TreeViewItem control = BuildNodeContents(rootNode, 0, true);
+        // control.IsExpanded = true;
+        build.Stop();
+        DebugWriter.WriteLine("Explorer", $"builds: Elapsed {build.ElapsedMilliseconds} ms");
+        Stopwatch other1 = Stopwatch.StartNew();
+        treeView.Items.Add(control);
+        scrollViewer.Content = treeView;
+        FileExplore.Child = scrollViewer;
+        other1.Stop();
+        DebugWriter.WriteLine("Explorer", $"other1: Elapsed {other1.ElapsedMilliseconds} ms");
+
+        stopwatch.Stop();
+        DebugWriter.WriteLine("Explorer", $"UpdateTreeContents: Elapsed {stopwatch.ElapsedMilliseconds} ms");
+        UpdateSettings();
     }
 
     public override void UpdateSettings()
     {
         button.Foreground = Application.Current.Resources.GetResource("button.foreground");
         button.Background = Application.Current.Resources.GetResource("button.background");
+        button.AddHoverBackground("button.background", "button.hover.background");
         textBlock.Foreground = Application.Current.Resources.GetResource("sidepanel.foreground");
         MainPanel.Background = Application.Current.Resources.GetResource("sidepanel.background");
         Background = Application.Current.Resources.GetResource("sidepanel.background");
+
+        if (FileExplore.Child != null)
+        {
+            // ScrollViewer scrollViewer = (ScrollViewer)FileExplore.Child;
+            FileExplore.Height = ElementSize.Height;
+            scrollViewer.Height = ElementSize.Height;
+            treeView.Height = ElementSize.Height;
+        }
     }
     public void UpdateTreeSettings(TreeViewItem treeItem, Brush brush)
     {
@@ -207,44 +250,63 @@ public class Explorer : SidePanelElement
         */
     }
 
-    public ExplorerNode BuildNode(string path)
+    public ExplorerNode BuildNode(string path, bool first = false)
     {
+        Stopwatch stopwatch = null;
+        if (first == true)
+        {
+            stopwatch = Stopwatch.StartNew();
+        }
         var node = new ExplorerNode { Header = Path.GetFileName(path), Path = path, IsDirectory = Directory.Exists(path) };
-
 
         if (node.IsDirectory)
         {
-            foreach (var dir in Directory.GetDirectories(path).OrderBy(d => d)) node.Children.Add(BuildNode(dir));
-            foreach (var file in Directory.GetFiles(path).OrderBy(f => f)) node.Children.Add(new ExplorerNode { Header = Path.GetFileName(file), Path = file, IsDirectory = false });
+            foreach (var dir in Directory.GetDirectories(path).OrderBy(d => d))
+            {
+                node.Children.Add(BuildNode(dir));
+            }
+            foreach (var file in Directory.GetFiles(path).OrderBy(f => f))
+            {
+                node.Children.Add(new ExplorerNode
+                {
+                    Header = Path.GetFileName(file),
+                    Path = file,
+                    IsDirectory = false
+                });
+            }
         }
 
-
+        if (first == true)
+        {
+            stopwatch.Stop();
+            DebugWriter.WriteLine("Explorer", $"BuildNode: Elapsed {stopwatch.ElapsedMilliseconds} ms");
+        }
         return node;
     }
 
-    public Control BuildNodeContents(ExplorerNode node, int indent)
+    public TreeViewItem BuildNodeContents(ExplorerNode node, int indent, bool first = false)
     {
-        StackPanel panel = new StackPanel()
+        Stopwatch stopwatch = null;
+        if (first == true)
         {
-            Orientation = Orientation.Vertical,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-        };
+            stopwatch = Stopwatch.StartNew();
+        }
 
-        var childrenPanel = new StackPanel { Orientation = Orientation.Vertical, Margin = new Thickness(IndentStep, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Stretch };
-        ExplorerNodeItem item = new ExplorerNodeItem();
-        StackPanel stackPanel = item.CreateLayout(node, childrenPanel);
+        TreeViewItem root = new TreeViewItem() { Header = node.Header, Tag = node };
+        root.ContextMenu = treeItemMenu;
 
-        panel.Children.Add(stackPanel);
-        // Children container
         foreach (var child in node.Children)
         {
-            var childControl = BuildNodeContents(child, 0);
-            childrenPanel.Children.Add(childControl);
+            var childControl = BuildNodeContents(child, indent + 1);
+            root.Items.Add(childControl);
         }
-        childrenPanel.IsVisible = node.IsExpanded; // collapse by default if needed
-        panel.Children.Add(childrenPanel);
 
-        return panel;
+        if (first == true)
+        {
+            stopwatch.Stop();
+            DebugWriter.WriteLine("Explorer", $"BuildNodeContents: Elapsed {stopwatch.ElapsedMilliseconds} ms");
+        }
+        return root;
     }
 
     public void UpdateNode(string path, string value)

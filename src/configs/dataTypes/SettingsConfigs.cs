@@ -102,6 +102,21 @@ public class EditorConfigs : Settings<EditorConfigs>
 
             if (!string.IsNullOrWhiteSpace(otherConfig.Editor.FontFamily))
                 Editor.FontFamily = otherConfig.Editor.FontFamily;
+
+            if (otherConfig.Editor.AutoIndent != default)
+                Editor.AutoIndent = otherConfig.Editor.AutoIndent;
+
+            if (!string.IsNullOrWhiteSpace(otherConfig.Editor.IndentSize))
+                Editor.IndentSize = otherConfig.Editor.IndentSize;
+
+            if (otherConfig.Editor.InsertSpaces != default)
+                Editor.InsertSpaces = otherConfig.Editor.InsertSpaces;
+
+            if (otherConfig.Editor.IndentWidth != default)
+                Editor.IndentWidth = otherConfig.Editor.IndentWidth;
+
+            if (otherConfig.Editor.WordWrap != default)
+                Editor.WordWrap = otherConfig.Editor.WordWrap;
         }
 
         // 2. Merge extensions (free-form JSON dictionaries)

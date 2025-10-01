@@ -22,7 +22,8 @@ public static class AppPaths
     /// <summary>
     /// Contants recent projects, default theme and other things
     /// </summary>
-    public static readonly string GlobalStorageFilePath = Path.Combine(AppDataDirectoryPath, "storage.json");
+    public static readonly string GlobalStorageFilePath = Path.Combine(GlobalStorageDirectoryPath, "storage.json");
+
     #endregion
 
     #endregion
@@ -47,6 +48,14 @@ public static class AppPaths
     public static string WorkspaceConfigFilePath => !string.IsNullOrEmpty(WorkspaceDirectoryPath) ? Path.Combine(WorkspaceDirectoryPath, ".editor", "settings.json") : string.Empty;
     #endregion
 
+    #region TempPaths
+
+    public static readonly string TempDirectoryPath = Path.Combine(AppDataDirectoryPath, "Temp");
+
+    public static readonly string TempCommandDirectoryPath = Path.Combine(TempDirectoryPath, "Commands");
+
+    #endregion
+
 
     public static void EnsureDirectoriesExist()
     {
@@ -56,6 +65,9 @@ public static class AppPaths
         ensureDirectoryExists(UserProfileDirectoryPath);
         ensureDirectoryExists(ExtensionsDirectoryPath);
         ensureDirectoryExists(ThemesDirectoryPath);
+
+        ensureDirectoryExists(TempDirectoryPath);
+        ensureDirectoryExists(TempCommandDirectoryPath);
     }
 
     private static void ensureDirectoryExists(string directory)

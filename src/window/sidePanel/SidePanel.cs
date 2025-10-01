@@ -4,10 +4,11 @@ using Avalonia.Media;
 using Avalonia.Layout;
 using Avalonia;
 
-public class SidePanel : Grid
+public class SidePanel : ControlElement<SidePanel>
 {
     List<SidePanelElement> panelElements = new List<SidePanelElement>();
 
+    public Grid mainGrid;
     private TabControl tabControl;
     private Button toggleButton;
 
@@ -24,20 +25,21 @@ public class SidePanel : Grid
 
     public SidePanel(Dock dock, double width = 250)
     {
+        Initialize();
         Dock = dock;
         originalWidth = width;
         MinWidth = 170;
 
         Background = Application.Current.Resources.GetResource("sidepanel.background");
-
+        mainGrid = new Grid();
         // Create a grid with two rows: button row and tab row
-        RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // button
-        RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star))); // tabs
+        mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // button
+        mainGrid.RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star))); // tabs
 
         // TabControl for tabs
         tabControl = new TabControl();
-        SetColumn(tabControl, 1);
-        Children.Add(tabControl);
+        Grid.SetColumn(tabControl, 1);
+        mainGrid.Children.Add(tabControl);
 
         // Toggle button
         toggleButton = new Button
@@ -54,7 +56,7 @@ public class SidePanel : Grid
             Toggle();
         };
         Grid.SetRow(toggleButton, 0);
-        Children.Add(toggleButton);
+        mainGrid.Children.Add(toggleButton);
 
         // GridSplitter
         Splitter = new GridSplitter
@@ -71,6 +73,8 @@ public class SidePanel : Grid
                 item.ElementSize = args.NewSize - new Size(0, tabControl.Height / 2);
             }
         };
+
+        Children.Add(mainGrid);
     }
 
     private ColumnDefinition parentColumn;

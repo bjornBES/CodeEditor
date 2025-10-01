@@ -6,7 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Input;
 using lib.debug;
 
-public class TopPalette : StackPanel
+public class TopPalette : ControlElement<TopPalette>
 {
     public TopPalette()
     {
@@ -15,6 +15,7 @@ public class TopPalette : StackPanel
 
     public void InitializeComponent()
     {
+        Initialize();
         MinWidth = 400;
         MaxWidth = 800;
         IsVisible = false;

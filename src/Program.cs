@@ -10,7 +10,7 @@ public class Program
         DebugWriter.Clean();
         DebugWriter.Initialize(Console.Out);
         DebugWriter.AddModule("Main", "log_Main_console", "Main");
-        DebugWriter.AddModulesToLog("Main", "Commands", "KeybindingManager", "Window", "Explorer", "Top palette", "Editor");
+        DebugWriter.AddModulesToLog("Main", "Main.API", "Commands", "KeybindingManager", "Window", "Explorer", "Top palette", "Editor");
         DebugWriter.AddModule("AvaloniaEdit", "log_AvaloniaEdit_console", "AvaloniaEdit");
         DebugWriter.WriteLine("Main", "Hello world");
         {
@@ -22,4 +22,3 @@ public class Program
     .UsePlatformDetect()
     .LogToTrace();
 }
-

@@ -10,7 +10,7 @@ public class EditorSection
     public bool InsertSpaces { get; set; }
     public int IndentWidth { get; set; }
 
-
+    public bool WordWrap { get; set; }
     // and so on for all the settings that effect the editor
 }
 

@@ -11,15 +11,20 @@ using TextMateSharp.Internal.Themes.Reader;
 using AvaloniaEdit.Editing;
 using Avalonia.LogicalTree;
 
-public class EditorPanel : Panel
+public class EditorPanel : ControlElement<EditorPanel>
 {
+    public int PanelIndex = -1;
     TabControl tabControl;
     List<EditorTab> tabs;
+    List<EditorTab> pinnedEditorTabs;
 
     RegistryOptions registryOptions;
+    int count = 0;
+    bool IsFocused = false;
 
-    public EditorPanel()
+    public EditorPanel(int panelIndex)
     {
+        PanelIndex = panelIndex;
         InitializeComponent();
 
         registryOptions = new RegistryOptions(ThemeName.DarkPlus);
@@ -27,12 +32,38 @@ public class EditorPanel : Panel
 
     public void InitializeComponent()
     {
+        Initialize();
+
+        CommandManager.RegisterCommand("Pin editor", "editor.action.pinEditor.index", PinTabWithIndex);
+
         tabs = new List<EditorTab>();
+        pinnedEditorTabs = new List<EditorTab>();
 
         tabControl = new TabControl()
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
+            AutoScrollToSelectedItem = true,
+            TabStripPlacement = Dock.Top,
+        };
+        tabControl.SelectionChanged += (sender, e) =>
+        {
+            if (e.AddedItems.Count == 0)
+            {
+                return;
+            }
+            TabItem tab = (TabItem)e.AddedItems[0];
+            if (tab == null)
+            {
+                return;
+            }
+            EditorTab editorTab = tab.Content as EditorTab;
+
+            TextEditor textEditor = editorTab.GetEditor();
+
+            UpdateInstance("activeEditorIsPinned", editorTab);
+            UpdateInstance("editorTextFocus", editorTab);
+            UpdateInstance("editorFocus", editorTab);
         };
         Children.Add(tabControl);
 
@@ -42,7 +73,7 @@ public class EditorPanel : Panel
 
     public void NewTab(string filePath)
     {
-        var tab = NewTab();
+        EditorTab tab = NewTab();
         tab.Load(filePath);
         tab.LoadSyntaxHighlighting(registryOptions);
 
@@ -50,51 +81,37 @@ public class EditorPanel : Panel
         {
             Header = tab.GetHeader(),
             Content = tab,
-            Background = Brushes.White,
             FontSize = 16,
             Height = 10,
+            BorderThickness = new Thickness(1, 2, 1, 0),
+            BorderBrush = Application.Current.Resources.GetResource("editor.tabs.items.border.background"),
+            CornerRadius = new CornerRadius(5, 5, 0, 0),
+            Name = $"TabItem{count}"
         };
+        count++;
+        tabItem.AddPseudoClassesBackground("editor.tabs.background", "editor.tabs.items.hover.background", "pointerover");
+        tabItem.AddPseudoClassesBackground("editor.tabs.background", "editor.tabs.items.selected.background", "selected");
+        // tabItem.Background = Application.Current.Resources.GetResource("editor.tabs.background");
 
+
+        tab.AttachedToControl(tabControl);
         tabControl.Items.Add(tabItem);
         tabControl.SelectedItem = tabItem;
-        CommandManager.RegisterCommand("testFontInc", "editor.tab.incfont", () =>
-        {
-            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
-            EditorTab contents = (EditorTab)tabControl.SelectedContent;
-            tabItem1.FontSize += 1;
-            UpdateTestHeader(tabItem1, contents);
-        });
-        CommandManager.RegisterCommand("testFontDec", "editor.tab.decfont", () =>
-        {
-            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
-            EditorTab contents = (EditorTab)tabControl.SelectedContent;
-            tabItem1.FontSize -= 1;
-            UpdateTestHeader(tabItem1, contents);
-        });
-        CommandManager.RegisterCommand("TestHeightInc", "editor.tab.heightinc", () =>
-        {
-            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
-            EditorTab contents = (EditorTab)tabControl.SelectedContent;
-            tabItem1.Height += 1;
-            UpdateTestHeader(tabItem1, contents);
-        });
-        CommandManager.RegisterCommand("TestHeightDec", "editor.tab.heightdec", () =>
-        {
-            TabItem tabItem1 = (TabItem)tabControl.SelectedItem;
-            EditorTab contents = (EditorTab)tabControl.SelectedContent;
-            tabItem1.Height -= 1;
-            UpdateTestHeader(tabItem1, contents);
-        });
-    }
-
-    void UpdateTestHeader(TabItem tabItem, EditorTab tab)
-    {
-        tabItem.Header = tab.GetHeader() + $" : {tabItem.Width}x{tabItem.Height} {tabItem.FontSize}";
     }
 
     public EditorTab NewTab()
     {
-        var tab = new EditorTab();
+        var tab = new EditorTab()
+        {
+        };
+        tab.GetFocusAction += (tabPlacement) =>
+        { 
+            
+        };
+        tab.LostFocusAction += (tabPlacement) =>
+        { 
+            
+        };
         tabs.Add(tab);
         return tab;
     }
@@ -106,6 +123,11 @@ public class EditorPanel : Panel
             return tabs[index];
         }
         return null;
+    }
+
+    public EditorTab GetFocusedTab()
+    {
+        return tabs.FirstOrDefault(t => t.IsTabFocused);
     }
 
     public void UpdateSettings()
@@ -167,7 +189,7 @@ public class EditorPanel : Panel
     }
     private int getCurrentTabIndex()
     {
-        return 0;
+        return tabControl.SelectedIndex;
     }
     public void IndentCurrentDocument()
     {
@@ -211,11 +233,96 @@ public class EditorPanel : Panel
 
     public void OnConfigChanged()
     {
+        IBrush tabBackgroundColor = Application.Current.Resources.GetResource("editor.tabs.background");
+        IBrush tabBorderBackgroundColor = Application.Current.Resources.GetResource("editor.tabs.items.border.background");
+        tabControl.Background = tabBackgroundColor;
+        // Application.Current.Resources["TabItemHeaderBackgroundUnselected"] = tabBackgroundColor;
+        // Application.Current.Resources["TabItemHeaderBackgroundSelected"] = Application.Current.Resources.GetResource("editor.tabs.selected.background");
+        // Application.Current.Resources["TabItemHeaderBackgroundUnselectedPointerOver"] = Application.Current.Resources.GetResource("editor.tabs.hover.background");
+        // Application.Current.Resources["TabItemHeaderBackgroundSelectedPointerOver"] = Application.Current.Resources.GetResource("editor.tabs.hover+selected.background");
+
+        for (int i = 0; i < tabControl.Items.Count; i++)
+        {
+            TabItem item = (TabItem)tabControl.Items[i];
+            // item.Background = tabBackgroundColor;
+            item.BorderBrush = tabBorderBackgroundColor;
+        }
+
         foreach (EditorTab tab in tabs)
         {
             tab.OnConfigChanged();
         }
     }
 
+    public void UpdateInfo()
+    {
+        Application.Current.Resources["tab.count"] = tabControl.ItemCount;
+    }
+    public void PinTab()
+    {
+        int index = getCurrentTabIndex();
+        PinTab(tabs[index]);
+    }
+    public void PinTabWithIndex(int index)
+    {
+        PinTab(tabs[index]);
+    }
+    public void PinTab(EditorTab editorTab)
+    {
+        if (editorTab.IsPinned)
+        {
+            return;
+        }
+
+        pinnedEditorTabs.Add(editorTab);
+        tabs.Remove(editorTab);
+        TabItem tabItem = (TabItem)tabControl.Items.FirstOrDefault((x) =>
+        {
+            TabItem tab = (TabItem)x;
+            EditorTab editor = (EditorTab)tab.Content;
+            return editor != null && !editor.IsPinned && editor.TabPlacement == editorTab.TabPlacement;
+        });
+        tabControl.Items.Remove(tabItem);
+        tabControl.Items.Insert(pinnedEditorTabs.Count - 1, tabItem);
+        tabs.Insert(pinnedEditorTabs.Count - 1, editorTab);
+        editorTab.IsPinned = true;
+        editorTab.TabPlacement = pinnedEditorTabs.Count - 1;
+        tabItem.Header = editorTab.GetHeader();
+    }
+
+    public void UnpinTab()
+    {
+        int index = getCurrentTabIndex();
+        UnpinTab(tabs[index]);
+    }
+    public void UnpinTabWithIndex(int index)
+    {
+        UnpinTab(tabs[index]);
+    }
+    public void UnpinTab(EditorTab editorTab)
+    {
+        if (!editorTab.IsPinned)
+        {
+            return;
+        }
+
+        int index = pinnedEditorTabs.IndexOf(editorTab);
+        pinnedEditorTabs.Remove(editorTab);
+        tabs.Remove(editorTab);
+        TabItem tabItem = (TabItem)tabControl.Items.FirstOrDefault((x) =>
+        {
+            TabItem tab = (TabItem)x;
+            EditorTab editor = (EditorTab)tab.Content;
+            return editor != null && editor.IsPinned && editor.TabPlacement == editorTab.TabPlacement;
+        });
+        tabControl.Items.Remove(tabItem);
+        tabControl.Items.Add(tabItem);
+        tabs.Add(editorTab);
+        editorTab.IsPinned = false;
+        editorTab.TabPlacement = pinnedEditorTabs.Count - 1;
+        tabItem.Header = editorTab.GetHeader();
+    }
+
     public int TabCount => tabs.Count;
+
 }

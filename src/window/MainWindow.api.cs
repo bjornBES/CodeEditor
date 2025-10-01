@@ -20,9 +20,48 @@ public partial class MainWindow : Window
         {
             return null;
         }
+        if (GlobalStorageSettingsManager.Current.RecentFiles.Contains(path))
+        {
+            GlobalStorageSettingsManager.Current.RecentFiles.Remove(path);
+        }
+        GlobalStorageSettingsManager.Current.RecentFiles.Add(path);
         CodeEditor.LoadFile(path);
+        GlobalStorageSettingsManager.SaveGlobal();
         return path;
     }
+    string OpenFile(string path)
+    {
+        if (GlobalStorageSettingsManager.Current.RecentFiles.Contains(path))
+        {
+            GlobalStorageSettingsManager.Current.RecentFiles.Remove(path);
+        }
+        GlobalStorageSettingsManager.Current.RecentFiles.Add(path);
+        CodeEditor.LoadFile(path);
+        GlobalStorageSettingsManager.SaveGlobal();
+        return path;
+    }
+    void OpenFolder(string path)
+    {
+        if (string.IsNullOrEmpty(AppPaths.WorkspaceDirectoryPath))
+        {
+            EditorConfigsSettingsManager.SaveWorkspace();
+        }
+        if (!Directory.Exists(path))
+        {
+            DebugWriter.WriteLine("Main.API", $"directory dose not exist {path}");
+            return;
+        }
+        Explorer.OpenFolder(path);
+        EditorConfigsSettingsManager.ChangeLoaclPath(AppPaths.WorkspaceConfigFilePath);
+        EditorConfigsSettingsManager.Load();
+        if (GlobalStorageSettingsManager.Current.RecentFolders.Contains(path))
+        {
+            GlobalStorageSettingsManager.Current.RecentFolders.Remove(path);
+        }
+        GlobalStorageSettingsManager.Current.RecentFolders.Add(path);
+        GlobalStorageSettingsManager.SaveGlobal();
+    }
+
     void SaveFile()
     {
         CodeEditor.SaveFile();
@@ -39,5 +78,14 @@ public partial class MainWindow : Window
     void IndentDocument()
     {
         CodeEditor.IndentDocument();
+    }
+
+    void PinTab()
+    {
+        CodeEditor.PinTab();
+    }
+    void UnpinTab()
+    {
+        CodeEditor.UnpinTab();
     }
 }

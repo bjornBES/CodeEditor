@@ -18,18 +18,26 @@
     <Reference Include="lib.debug">
       <HintPath>../lib/debugConsole/src/bin/Debug/net9.0/debug.dll</HintPath>
     </Reference>
+    
+    <AvaloniaResource Include="src/avalonia/themes/**/*.xaml" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.3" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.3" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.3" />
+    <!--
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.3" />
+    -->
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.3.3" />
 
     <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.0.4" />
 
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.14.0" />
+
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 
     <PackageReference Include="NativeFileDialogSharp" Version="0.5.0" />
 
