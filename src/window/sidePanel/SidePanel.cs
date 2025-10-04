@@ -115,9 +115,14 @@ public class SidePanel : ControlElement<SidePanel>
         {
             tabItem.BorderBrush = Application.Current.Resources.GetResource("sidepanel.icon.border.background");
         };
-        if (!string.IsNullOrEmpty(element.IconPath))
+        string path = Path.Combine(AppPaths.DownloadedAssetsDirectoryPath, element.IconKey);
+        if (!string.IsNullOrEmpty(path))
         {
-            tabItem.Header = new Image() { Source = new Avalonia.Media.Imaging.Bitmap(element.IconPath), Width = 20, Height = 20 };
+            if (!File.Exists(path))
+            {
+                File.WriteAllBytes(path, CodeEditor.Resource.GetImage(element.IconKey));
+            }
+            tabItem.Header = new Image() { Source = new Avalonia.Media.Imaging.Bitmap(path), Width = 20, Height = 20 };
         }
         element.GotFocus += (sender, e) => { KeybindingManager.ActiveContext = element.Header; };
         tabControl.Items.Add(tabItem);

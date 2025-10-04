@@ -28,6 +28,12 @@ public static class Resource
         set => resourceCulture = value;
     }
 
+    public static byte[] GetImage(string path)
+    {
+        object obj = ResourceManager.GetObject(path, resourceCulture);
+        return ((byte[])(obj));
+    }
+
     public static byte[] ExplorerIcon
     {
         get

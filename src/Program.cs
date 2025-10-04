@@ -8,8 +8,6 @@ public class Program
     public const string AppName = "CodeEditorApp";
     public static int Main(string[] args)
     {
-        byte[] data = Resource.ExplorerIcon;
-        File.WriteAllBytes("./test.png", data);
         DebugWriter.Clean();
         DebugWriter.Initialize(Console.Out);
         DebugWriter.AddModule("Main", "log_Main_console", "Main");

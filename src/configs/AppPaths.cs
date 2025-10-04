@@ -56,6 +56,12 @@ public static class AppPaths
 
     #endregion
 
+    #region DownloadedAssets
+
+    public static readonly string DownloadedAssetsDirectoryPath = Path.Combine(AppDataDirectoryPath, "Downloads");
+
+    #endregion
+
 
     public static void EnsureDirectoriesExist()
     {
@@ -65,6 +71,8 @@ public static class AppPaths
         ensureDirectoryExists(UserProfileDirectoryPath);
         ensureDirectoryExists(ExtensionsDirectoryPath);
         ensureDirectoryExists(ThemesDirectoryPath);
+
+        ensureDirectoryExists(DownloadedAssetsDirectoryPath);
 
         ensureDirectoryExists(TempDirectoryPath);
         ensureDirectoryExists(TempCommandDirectoryPath);
