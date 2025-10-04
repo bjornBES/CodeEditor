@@ -22,4 +22,8 @@
     <value>Assets/Icons/explorer.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     <comment>/mnt/f99d9233-1253-481c-b2b4-9a3f0c96fc12/projects/CodeEditorProject/CodeEditor/Assets/Icons/explorer.png</comment>
   </data>
+  <data name="DefaultDarkTheme" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Assets/DefaultDark.json;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <comment>/mnt/f99d9233-1253-481c-b2b4-9a3f0c96fc12/projects/CodeEditorProject/CodeEditor/Assets/DefaultDark.json</comment>
+  </data>
 </root>

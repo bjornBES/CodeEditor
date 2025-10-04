@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Layout;
 using Avalonia.Input;
 using lib.debug;
+using System.Runtime.CompilerServices;
 
 public class TopPalette : ControlElement<TopPalette>
 {
@@ -69,6 +70,19 @@ public class TopPalette : ControlElement<TopPalette>
         element.ClosePalette += ClosePalette;
         Children.Add(element);
         element.OpenElement();
+    }
+
+    public void OpenPalette<T>(string paletteName, Action<T> action, T[] args) where T : class
+    {
+        Overlay.IsVisible = true;
+        IsVisible = true;
+        Overlay.Children.Add(this);
+
+        TopPaletteElement element = GetElement(paletteName);
+        element.ClosePalette += ClosePalette;
+        Children.Add(element);
+        
+        element.OpenElement(action, args);
     }
 
     public void ClosePalette()

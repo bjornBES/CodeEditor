@@ -11,6 +11,7 @@ using ReactiveUI;
 using Tmds.DBus.Protocol;
 using lib.debug;
 using Avalonia.Interactivity;
+using CodeEditor;
 public enum DialogType
 {
     OpenFile,
@@ -58,9 +59,19 @@ public partial class MainWindow : Window
         AppPaths.EnsureDirectoriesExist();
         AppPaths.EnsureFilesExist();
 
+        string path = Path.Combine(AppPaths.ThemesDirectoryPath, "DefaultDark.json");
+        if (!File.Exists(path))
+        {
+            File.WriteAllBytes(path, Resource.GetImage("DefaultDarkTheme"));
+        }
+
         if (!string.IsNullOrEmpty(GlobalStorageSettingsManager.Current.DefaultTheme))
         {
             SetTheme(GlobalStorageSettingsManager.Current.DefaultTheme);
+        }
+        else
+        {
+            SetTheme("DefaultDark");
         }
         Application.Current.Styles.Add(ThemeService.ThemeStyles);
 
@@ -255,7 +266,7 @@ public partial class MainWindow : Window
         TopBarMenu ViewMenu = TopMenu.AddMenu("View");
 
         TopBarMenu HelpMenu = TopMenu.AddMenu("Help");
-        
+
     }
 
     public override void EndInit()
@@ -406,16 +417,13 @@ public partial class MainWindow : Window
 
         TopPalette.OnKeyDownPalette(sender, e);
     }
-    bool isKeyDown(Key key, KeyEventArgs e, params KeyModifiers[] modifiers)
+
+    public void SetNewTheme()
     {
-        if (e.Key != key) return false;
-        int mods = 0;
-        foreach (var mod in modifiers)
-        {
-            mods |= (int)mod;
-        }
-        if (mods != (int)e.KeyModifiers) return false;
-        return true;
+        string[] themes = Directory.GetFiles(AppPaths.ThemesDirectoryPath, "*.json");
+        TopPalette.OpenPalette("list", SetTheme, themes);
+
+
     }
 
     public void OpenPalette()
