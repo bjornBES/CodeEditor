@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
+  <ItemGroup>  
+    <AvaloniaResource Include="src/avalonia/themes/**/*.xaml" />
+    <Compile Remove="Bigfile.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <ProjectReference Include="..\GlobalLibrary\GlobalLibrary.csproj" />
-    <!--
-    <Compile Remove="CodeEditorLibrary/**"/>
-    -->
     <ProjectReference Include="../lib/AvaloniaEdit/src/AvaloniaEdit.csproj" />
     <ProjectReference Include="../lib/AvaloniaEdit.TextMate/src/AvaloniaEdit.TextMate.csproj" />
-    <ProjectReference Include="../lib/debugConsole/src/debug.csproj" />
   
     <Reference Include="AvaloniaEdit">
       <HintPath>../lib/AvaloniaEdit/src/bin/Debug/net9.0/AvaloniaEdit.dll</HintPath>
@@ -15,13 +16,20 @@
     <Reference Include="AvaloniaEdit.TextMate">
       <HintPath>../lib/AvaloniaEdit.TextMate/src/bin/Debug/net9.0/AvaloniaEdit.TextMate.dll</HintPath>
     </Reference>
-    <Reference Include="lib.debug">
-      <HintPath>../lib/debugConsole/src/bin/Debug/net9.0/debug.dll</HintPath>
-    </Reference>
-    
-    <AvaloniaResource Include="src/avalonia/themes/**/*.xaml" />
+  </ItemGroup>
 
-    <Compile Remove="Bigfile.cs" />
+  <ItemGroup Condition="'$(Configuration)'=='Release'">
+    <ProjectReference Include="..\GlobalLibrary\GlobalLibrary.csproj" />
+    <ProjectReference Include="../lib/AvaloniaEdit/src/AvaloniaEdit.csproj" />
+    <ProjectReference Include="../lib/AvaloniaEdit.TextMate/src/AvaloniaEdit.TextMate.csproj" />
+    <ProjectReference Include="../lib/debugConsole/src/debug.csproj" />
+  
+    <Reference Include="AvaloniaEdit">
+      <HintPath>../lib/AvaloniaEdit/src/bin/Release/net9.0/AvaloniaEdit.dll</HintPath>
+    </Reference>
+    <Reference Include="AvaloniaEdit.TextMate">
+      <HintPath>../lib/AvaloniaEdit.TextMate/src/bin/Release/net9.0/AvaloniaEdit.TextMate.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
