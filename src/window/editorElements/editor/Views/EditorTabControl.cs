@@ -83,9 +83,22 @@ public class EditorTabControl : Panel
 
     private TabItem makeNewTabItem(string header, Control control, int count)
     {
+        StackPanel tabHeader = new StackPanel();
+        Button CloseButton = new Button()
+        {
+            Content = "X"
+        };
+        CloseButton.Click += (s, e) => { CommandManager.ExecuteCommand("editor.action.closeActiveEditor"); };
+        TextBlock TitleBox = new TextBlock()
+        {
+            Text = header,
+        };
+        tabHeader.Children.Add(TitleBox);
+        tabHeader.Children.Add(CloseButton);
+
         TabItem tabItem = new TabItem
         {
-            Header = header,
+            Header = tabHeader,
             Content = control,
             FontSize = 16,
             Height = 10,
